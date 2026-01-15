@@ -1,13 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import List
-from domain.imovel import Imovel
+from domain.scraper_result import ScraperResult
 
 class IScraper(ABC):
-    
     @abstractmethod
-    def buscar_imoveis(self) -> List[Imovel]:
+    def buscar_imoveis(self) -> ScraperResult:
         """
-        Método abstrato que deve ser implementado por todas as imobiliárias.
-        Deve retornar uma lista de objetos Imovel.
+        Executa a busca e retorna um ScraperResult contendo imóveis e erros encontrados.
         """
         pass

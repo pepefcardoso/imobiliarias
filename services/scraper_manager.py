@@ -1,6 +1,6 @@
 from typing import List
-import pandas as pd
 from interfaces.i_scraper import IScraper
+from domain.scraper_result import ScraperResult
 
 class ScraperManager:
     def __init__(self):
@@ -9,19 +9,19 @@ class ScraperManager:
     def adicionar_scraper(self, scraper: IScraper):
         self.scrapers.append(scraper)
 
-    def executar_todos(self):
-        todos_imoveis = []
+    def executar_todos(self) -> List[ScraperResult]:
+        """
+        Executa todos os scrapers e retorna uma lista de ScraperResults.
+        Não faz mais a consolidação dos imóveis aqui.
+        """
+        resultados_gerais = []
         
         for scraper in self.scrapers:
             try:
-                imoveis = scraper.buscar_imoveis()
-                todos_imoveis.extend(imoveis)
+                resultado = scraper.buscar_imoveis()
+                resultados_gerais.append(resultado)
+                
             except Exception as e:
-                print(f"Erro ao processar um scraper: {e}")
-
-        return todos_imoveis
-
-    def exportar_para_tabela(self, lista_imoveis):
-        dados = [i.to_dict() for i in lista_imoveis]
-        df = pd.DataFrame(dados)
-        return df
+                print(f"Erro crítico ao executar um scraper: {e}")
+                
+        return resultados_gerais
