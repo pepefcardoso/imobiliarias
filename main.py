@@ -1,32 +1,43 @@
+import pandas as pd
 from scrapers import KeyOnScraper
 from services.scraper_manager import ScraperManager
 
-def main():
-    print("--- Sistema de Busca de Imóveis ---")
+URL_KEYON_PADRAO = "https://www.keyonimoveis.com.br/aluguel/apartamento/tubarao/todos-os-bairros/todos-os-condominios/1-banheiros+1-quartos+1-vagas?valor_max=2.000,00&area_min=40&pagina=1"
 
-    manager = ScraperManager()
+def configurar_scrapers(manager: ScraperManager):
+    """
+    Centraliza a configuração de quais imobiliárias serão pesquisadas.
+    Aqui é fácil adicionar novas imobiliárias (ex: ImobiliariaBScraper).
+    """
+    manager.adicionar_scraper(KeyOnScraper(URL_KEYON_PADRAO))
 
-    url_pesquisa = "https://www.keyonimoveis.com.br/aluguel/apartamento/tubarao/todos-os-bairros/todos-os-condominios/1-banheiros+1-quartos+1-vagas?valor_max=2.000,00&area_min=40&pagina=1"
+def executar_agregador() -> pd.DataFrame:
+    """
+    Função principal que orquestra todo o processo usando a arquitetura do projeto.
+    Retorna um DataFrame pandas pronto para uso.
+    """
+    print("--- Iniciando Orquestrador de Pesquisas ---")
     
-    manager.adicionar_scraper(KeyOnScraper(url_pesquisa))
+    manager = ScraperManager()
+    
+    configurar_scrapers(manager)
 
-    print("Executando pesquisas...")
+    print("Executando scrapers...")
     resultados = manager.executar_todos()
 
+    print(f"Total de imóveis agregados: {len(resultados)}")
+
     if resultados:
-        df = manager.exportar_para_tabela(resultados)
-        
-        import pandas as pd
-        pd.set_option('display.max_columns', None)
-        pd.set_option('display.width', 1000)
-        
-        print("\nResultados Unificados:")
-        print(df)
-        
-        # df.to_excel("resultados_imoveis.xlsx", index=False)
-        # print("\nArquivo 'resultados_imoveis.xlsx' salvo com sucesso!")
+        return manager.exportar_para_tabela(resultados)
     else:
-        print("Nenhum imóvel encontrado.")
+        return pd.DataFrame()
 
 if __name__ == "__main__":
-    main()
+    df_resultado = executar_agregador()
+    
+    if not df_resultado.empty:
+        print("\n--- Resultados Unificados (Terminal) ---")
+        print(df_resultado)
+        # df_resultado.to_excel("resultados.xlsx")
+    else:
+        print("Nenhum resultado encontrado.")
