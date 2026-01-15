@@ -9,6 +9,7 @@ from services.agregador_use_case import AgregadorUseCase
 from services.data_exporter import DataExporter
 from parsers.keyon_parser import KeyOnParser
 from parsers.qualalugar_parser import QualAlugarParser
+from parsers.bilcom_parser import BilcomParser
 
 def configurar_scrapers(manager: ScraperManager, logger: StructuredLogger):
     client = SeleniumClient(headless=True)
@@ -26,6 +27,13 @@ def configurar_scrapers(manager: ScraperManager, logger: StructuredLogger):
         parser_cls=QualAlugarParser, 
         wait_selector=None, 
         source_name="QualAlugar"
+    )
+
+    ScraperFactory.register(
+        key='bilcom', 
+        parser_cls=BilcomParser, 
+        wait_selector="address",
+        source_name="Bilcom"
     )
 
     for key, config in AppConfig.SCRAPERS.items():

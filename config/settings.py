@@ -23,5 +23,10 @@ class AppConfig:
             name='QualAlugar',
             url="https://www.qualalugar.net/imoveis/para-alugar/apartamento+casa/brasil?area=40--10000000&precolocacao=500--2000&dormitorios=1--2--3&vagas=1--2--3&banheiros=1--2--3&propertySubtypes=346&propertySubtypes=19&propertySubtypes=325&propertySubtypes=169&finalidade=1&order=mais_relevantes",
             enabled=True
+        ),
+        'bilcom': ScraperConfig(
+            name='Bilcom',
+            url="https://bilcomimoveis.com.br/alugar/apartamento/tubarao-sc?minValue=500%2C00&maxValue=2.000%2C00&by_type_slug=apartamento&typeArea=private_area&floorComparision=equals&sort=is_price_shown%2Ccalculated_price%2Cid&offset=1&limit=21&bedrooms=1&garages=1",
+            enabled=True
         )
     }
