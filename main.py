@@ -5,54 +5,53 @@ from services.scraper_manager import ScraperManager
 from factories.scraper_factory import ScraperFactory
 from services.logger import StructuredLogger
 from repositories.imovel_repository import ImovelRepository
+from services.agregador_use_case import AgregadorUseCase
+from services.data_exporter import DataExporter
+from parsers.keyon_parser import KeyOnParser
+from parsers.qualalugar_parser import QualAlugarParser
 
 def configurar_scrapers(manager: ScraperManager, logger: StructuredLogger):
     client = SeleniumClient(headless=True)
     factory = ScraperFactory(client, logger)
-    
-    cfg_keyon = AppConfig.SCRAPERS.get('keyon')
-    if cfg_keyon and cfg_keyon.enabled:
-        scraper = factory.create_keyon_scraper(cfg_keyon.url)
-        manager.adicionar_scraper(scraper)
 
-    cfg_qual = AppConfig.SCRAPERS.get('qualalugar')
-    if cfg_qual and cfg_qual.enabled:
-        scraper = factory.create_qualalugar_scraper(cfg_qual.url)
-        manager.adicionar_scraper(scraper)
+    ScraperFactory.register(
+        key='keyon', 
+        parser_cls=KeyOnParser, 
+        wait_selector="div.card", 
+        source_name="KeyOn"
+    )
+    
+    ScraperFactory.register(
+        key='qualalugar', 
+        parser_cls=QualAlugarParser, 
+        wait_selector=None, 
+        source_name="QualAlugar"
+    )
+
+    for key, config in AppConfig.SCRAPERS.items():
+        if config.enabled:
+            try:
+                logger.info(f"Configurando scraper: {config.name}")
+                scraper = factory.create_scraper(key, config.url)
+                manager.adicionar_scraper(scraper)
+            except ValueError as e:
+                logger.error(f"Erro na configuração do scraper '{key}':", exc=e)
 
 def executar_agregador() -> pd.DataFrame:
+    """
+    Ponto de entrada (Composition Root).
+    """
     logger = StructuredLogger()
-    logger.info("--- Iniciando Orquestrador de Pesquisas ---")
-    
     manager = ScraperManager()
     repository = ImovelRepository()
     
     configurar_scrapers(manager, logger)
 
-    if not manager.scrapers:
-        logger.info("Aviso: Nenhum scraper ativo.")
-        return pd.DataFrame()
-
-    logger.info(f"Executando {len(manager.scrapers)} scrapers ativos...")
+    use_case = AgregadorUseCase(manager, repository, logger)
     
-    lista_resultados = manager.executar_todos()
-
-    total_imoveis = 0
-    total_erros = 0
+    lista_imoveis = use_case.executar()
     
-    for resultado in lista_resultados:
-        if resultado.imoveis:
-            repository.adicionar_lista(resultado.imoveis)
-            total_imoveis += len(resultado.imoveis)
-            
-        if resultado.erros:
-            total_erros += len(resultado.erros)
-            for erro in resultado.erros:
-                logger.info(f"[Erro de Extração] {erro}")
-
-    logger.info(f"Resumo: {total_imoveis} imóveis capturados, {total_erros} erros reportados.")
-
-    return repository.to_dataframe()
+    return DataExporter.para_dataframe(lista_imoveis)
 
 if __name__ == "__main__":
     df_resultado = executar_agregador()
@@ -63,5 +62,6 @@ if __name__ == "__main__":
         cols_finais = [c for c in cols_desejadas if c in df_resultado.columns]
         print(df_resultado[cols_finais])
         
+        # DataExporter.exportar_csv(lista_imoveis, "imoveis.csv") 
     else:
         print("Nenhum resultado encontrado.")
