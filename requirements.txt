@@ -13,7 +13,7 @@
 # ---------------------------------------------------------------------------
 
 # Phase 3 — HTTP / browser clients
-# requests==2.32.3
+requests==2.32.3
 # playwright==1.44.0
 
 # Phase 6 — API
@@ -21,4 +21,4 @@
 # uvicorn[standard]==0.30.1
 
 # Phase 9 — tests
-# pytest==8.2.2
+pytest==8.2.2

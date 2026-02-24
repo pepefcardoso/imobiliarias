@@ -84,5 +84,17 @@ settings = Settings(
             use_browser=False,
             max_pages=10,
         ),
+        AgencyConfig(
+            name="sittuarimoveis",
+            url="https://www.sittuarimoveis.com.br",
+            use_browser=False,
+            max_pages=10,
+        ),
+        AgencyConfig(
+            name="bilcomimoveis",
+            url="https://bilcomimoveis.com.br",
+            use_browser=False,
+            max_pages=10,
+        ),
     ],
 )
