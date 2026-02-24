@@ -47,11 +47,11 @@ project/
 
 Tasks:
 
-- [ ] Remove unnecessary architectural layers (pipelines, factories, repositories, use cases)
-- [ ] Ensure scraping logic exists only inside `scrapers/`
-- [ ] Ensure infrastructure layer contains no parsing logic
-- [ ] Ensure API layer contains no business logic
-- [ ] Ensure core layer remains stable and minimal
+- [X] Remove unnecessary architectural layers (pipelines, factories, repositories, use cases)
+- [X] Ensure scraping logic exists only inside `scrapers/`
+- [X] Ensure infrastructure layer contains no parsing logic
+- [X] Ensure API layer contains no business logic
+- [X] Ensure core layer remains stable and minimal
 
 ---
 
@@ -61,8 +61,8 @@ Tasks:
 
 File: core/models.py
 
-- [ ] Create `Property` dataclass
-- [ ] Include required normalized fields:
+- [X] Create `Property` dataclass
+- [X] Include required normalized fields:
   - agency
   - title
   - price (float | None)
@@ -73,9 +73,9 @@ File: core/models.py
   - neighborhood (str | None)
   - city (str | None)
   - url
-- [ ] Ensure full type hints
-- [ ] Ensure model contains no parsing logic
-- [ ] Ensure model is JSON serializable
+- [X] Ensure full type hints
+- [X] Ensure model contains no parsing logic
+- [X] Ensure model is JSON serializable
 
 ---
 
@@ -85,12 +85,12 @@ File: core/parsing_utils.py
 
 Create shared normalization helpers:
 
-- [ ] parse_price
-- [ ] parse_area
-- [ ] safe_int
-- [ ] safe_float
-- [ ] normalize_whitespace
-- [ ] build_absolute_url
+- [X] parse_price
+- [X] parse_area
+- [X] safe_int
+- [X] safe_float
+- [X] normalize_whitespace
+- [X] build_absolute_url
 
 Rules:
 
@@ -106,11 +106,11 @@ Rules:
 
 File: infrastructure/http_client.py
 
-- [ ] Implement simple HTTP GET wrapper
-- [ ] Add timeout support
-- [ ] Add configurable user-agent
-- [ ] Raise meaningful exceptions
-- [ ] Do not include scraping logic
+- [X] Implement simple HTTP GET wrapper
+- [X] Add timeout support
+- [X] Add configurable user-agent
+- [X] Raise meaningful exceptions
+- [X] Do not include scraping logic
 
 ---
 
@@ -118,10 +118,10 @@ File: infrastructure/http_client.py
 
 File: infrastructure/browser_client.py
 
-- [ ] Implement browser automation (Playwright or Selenium)
-- [ ] Support timeout configuration
-- [ ] Use only when JavaScript rendering is required
-- [ ] Avoid defaulting to browser automation
+- [X] Implement browser automation (Playwright or Selenium)
+- [X] Support timeout configuration
+- [X] Use only when JavaScript rendering is required
+- [X] Avoid defaulting to browser automation
 
 ---
 
@@ -131,10 +131,10 @@ File: infrastructure/browser_client.py
 
 File: scrapers/base.py
 
-- [ ] Implement abstract base class `AgencyScraper`
-- [ ] Define `name` attribute
-- [ ] Define abstract method `scrape() -> list[Property]`
-- [ ] Ensure no cross-dependency between scrapers
+- [X] Implement abstract base class `AgencyScraper`
+- [X] Define `name` attribute
+- [X] Define abstract method `scrape() -> list[Property]`
+- [X] Ensure no cross-dependency between scrapers
 
 ---
 
@@ -154,8 +154,8 @@ For each agency:
 
 Progress tracking:
 
-- [ ] Agency 1 implemented
-- [ ] Agency 2 implemented
+- [X] Agency 1 implemented
+- [X] Agency 2 implemented
 - [ ] ...
 - [ ] Agency 30+ implemented
 
