@@ -66,11 +66,7 @@ class Settings:
     """
     List of agencies to scrape.
 
-    Example:
-        agencies=[
-            AgencyConfig(name="bilcom", url="https://bilcom.com.br/imoveis"),
-            AgencyConfig(name="example_js", url="https://js-agency.com/listings", use_browser=True),
-        ]
+    Add one AgencyConfig entry per implemented scraper.
     """
 
 
@@ -82,7 +78,11 @@ settings = Settings(
     request_timeout=30,
     max_pages=10,
     agencies=[
-        # Register agencies here as scrapers are implemented.
-        # AgencyConfig(name="bilcom", url="https://bilcom.com.br/imoveis"),
+        AgencyConfig(
+            name="keyonimoveis",
+            url="https://www.keyonimoveis.com.br",
+            use_browser=False,
+            max_pages=10,
+        ),
     ],
 )
