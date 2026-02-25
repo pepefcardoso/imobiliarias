@@ -108,5 +108,11 @@ settings = Settings(
             use_browser=False,
             max_pages=10,
         ),
+        AgencyConfig(
+            name="larroydimoveis",
+            url="https://larroydimoveis.com.br",
+            use_browser=False,
+            max_pages=10,
+        ),
     ],
 )
