@@ -157,7 +157,7 @@ Progress tracking:
 - [X] Agency 1 implemented
 - [X] Agency 2 implemented
 - [ ] ...
-- [ ] Agency 30+ implemented
+- [X] Agency 20+ implemented
 
 ---
 
@@ -174,17 +174,17 @@ Responsibilities:
 
 Tasks:
 
-- [ ] Implement Aggregator class
-- [ ] Accept list of scrapers in constructor
-- [ ] Loop through scrapers
-- [ ] Catch and log errors
-- [ ] Continue execution if one scraper fails
-- [ ] Return unified list of Property
+- [X] Implement Aggregator class
+- [X] Accept list of scrapers in constructor
+- [X] Loop through scrapers
+- [X] Catch and log errors
+- [X] Continue execution if one scraper fails
+- [X] Return unified list of Property
 
 Optional enhancement:
 
-- [ ] Add concurrency with ThreadPoolExecutor (one thread per scraper)
-- [ ] Add per-scraper timeout safety
+- [X] Add concurrency with ThreadPoolExecutor (one thread per scraper)
+- [X] Add per-scraper timeout safety
 
 ---
 
@@ -194,16 +194,16 @@ File: api/main.py
 
 Tasks:
 
-- [ ] Implement FastAPI application
-- [ ] Create GET /properties endpoint
-- [ ] Return JSON list of Property
-- [ ] Add optional filters:
+- [X] Implement FastAPI application
+- [X] Create GET /properties endpoint
+- [X] Return JSON list of Property
+- [X] Add optional filters:
   - city
   - min_price
   - max_price
   - bedrooms
-- [ ] Ensure API layer contains no scraping logic
-- [ ] Ensure API layer contains no business logic
+- [X] Ensure API layer contains no scraping logic
+- [X] Ensure API layer contains no business logic
 
 ---
 
