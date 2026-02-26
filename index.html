@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Imóveis Tubarão — Agregador</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #f5f0e8;
+        --surface: #fffdf8;
+        --border: #d9cfc0;
+        --ink: #1a1610;
+        --ink-muted: #6b6254;
+        --accent: #c4501a;
+        --accent-lt: #f0e2d8;
+        --green: #2d6a4f;
+        --row-hover: #faf6ef;
+      }
+
+      html {
+        font-size: 15px;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "DM Sans", sans-serif;
+        font-weight: 400;
+        min-height: 100vh;
+      }
+
+      /* ── HEADER ── */
+      header {
+        background: var(--ink);
+        color: #f5f0e8;
+        padding: 2rem 2.5rem 1.6rem;
+        display: flex;
+        align-items: flex-end;
+        gap: 1.5rem;
+        border-bottom: 3px solid var(--accent);
+      }
+
+      .header-title {
+        font-family: "Playfair Display", serif;
+        font-size: 2.2rem;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        line-height: 1;
+      }
+
+      .header-title span {
+        color: var(--accent);
+        font-style: italic;
+      }
+
+      .header-sub {
+        font-size: 0.78rem;
+        font-weight: 300;
+        color: #a89f93;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding-bottom: 4px;
+      }
+
+      /* ── CONTROLS ── */
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: flex-end;
+        padding: 1.4rem 2.5rem;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .control-group label {
+        font-size: 0.7rem;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+
+      .control-group input,
+      .control-group select {
+        height: 38px;
+        padding: 0 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.9rem;
+        transition: border-color 0.15s;
+        outline: none;
+        min-width: 140px;
+      }
+
+      .control-group input:focus,
+      .control-group select:focus {
+        border-color: var(--accent);
+      }
+
+      .btn {
+        height: 38px;
+        padding: 0 1.4rem;
+        border: none;
+        border-radius: 4px;
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.15s, transform 0.1s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .btn-primary:hover {
+        background: #a84215;
+      }
+      .btn-primary:active {
+        transform: scale(0.98);
+      }
+
+      .btn-ghost {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--ink-muted);
+      }
+
+      .btn-ghost:hover {
+        border-color: var(--ink-muted);
+        color: var(--ink);
+      }
+
+      .controls-right {
+        margin-left: auto;
+        display: flex;
+        align-items: flex-end;
+        gap: 0.5rem;
+      }
+
+      /* ── STATUS BAR ── */
+      .status-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.6rem 2.5rem;
+        font-size: 0.78rem;
+        color: var(--ink-muted);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .status-bar b {
+        color: var(--ink);
+        font-weight: 500;
+      }
+
+      .loading-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--accent);
+        animation: pulse 1s infinite;
+        display: inline-block;
+        margin-right: 6px;
+        vertical-align: middle;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+
+      /* ── TABLE ── */
+      .table-wrap {
+        overflow-x: auto;
+        padding: 0 2.5rem 3rem;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1.2rem;
+      }
+
+      thead tr {
+        border-bottom: 2px solid var(--ink);
+      }
+
+      th {
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        padding: 0.6rem 0.8rem;
+        text-align: left;
+        white-space: nowrap;
+        user-select: none;
+      }
+
+      th.sortable {
+        cursor: pointer;
+      }
+      th.sortable:hover {
+        color: var(--ink);
+      }
+
+      th .sort-icon {
+        display: inline-block;
+        margin-left: 4px;
+        opacity: 0.4;
+        font-size: 0.65rem;
+      }
+
+      th.sort-asc .sort-icon::after {
+        content: "▲";
+        opacity: 1;
+      }
+      th.sort-desc .sort-icon::after {
+        content: "▼";
+        opacity: 1;
+      }
+      th:not(.sort-asc):not(.sort-desc) .sort-icon::after {
+        content: "⇅";
+      }
+
+      tbody tr {
+        border-bottom: 1px solid var(--border);
+        transition: background 0.1s;
+        animation: fadeIn 0.25s ease both;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      tbody tr:hover {
+        background: var(--row-hover);
+      }
+
+      td {
+        padding: 0.75rem 0.8rem;
+        font-size: 0.88rem;
+        vertical-align: middle;
+      }
+
+      td.title-cell {
+        max-width: 280px;
+      }
+
+      .listing-title {
+        font-family: "Playfair Display", serif;
+        font-size: 0.9rem;
+        font-weight: 400;
+        color: var(--ink);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.35;
+      }
+
+      .listing-agency {
+        font-size: 0.7rem;
+        color: var(--ink-muted);
+        margin-top: 2px;
+        letter-spacing: 0.03em;
+      }
+
+      .price {
+        font-weight: 500;
+        color: var(--green);
+        white-space: nowrap;
+        font-size: 0.92rem;
+      }
+
+      .price-null {
+        color: var(--ink-muted);
+        font-style: italic;
+        font-size: 0.8rem;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        background: var(--accent-lt);
+        color: var(--accent);
+        border-radius: 20px;
+        padding: 2px 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+
+      .tag {
+        display: inline-block;
+        background: #e8e4dc;
+        color: var(--ink-muted);
+        border-radius: 3px;
+        padding: 1px 6px;
+        font-size: 0.72rem;
+        margin: 1px;
+      }
+
+      .null-dash {
+        color: var(--border);
+      }
+
+      a.link {
+        color: var(--accent);
+        text-decoration: none;
+        font-size: 0.78rem;
+        font-weight: 500;
+      }
+
+      a.link:hover {
+        text-decoration: underline;
+      }
+
+      /* ── EMPTY / ERROR ── */
+      .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        color: var(--ink-muted);
+      }
+
+      .empty-state .big {
+        font-family: "Playfair Display", serif;
+        font-size: 2rem;
+        color: var(--border);
+        margin-bottom: 0.5rem;
+      }
+
+      .error-banner {
+        margin: 1.5rem 2.5rem;
+        padding: 1rem 1.2rem;
+        background: #fdf0ed;
+        border-left: 4px solid var(--accent);
+        border-radius: 0 4px 4px 0;
+        font-size: 0.85rem;
+        color: #7a2d10;
+      }
+
+      /* ── PAGINATION ── */
+      .pagination {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 1.5rem 0 2rem;
+      }
+
+      .page-btn {
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--surface);
+        color: var(--ink-muted);
+        cursor: pointer;
+        font-size: 0.82rem;
+        font-family: "DM Sans", sans-serif;
+        transition: all 0.1s;
+      }
+
+      .page-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .page-btn.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      .page-btn:disabled {
+        opacity: 0.35;
+        cursor: default;
+      }
+
+      @media (max-width: 768px) {
+        header {
+          padding: 1.4rem 1.2rem;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.4rem;
+        }
+        .header-title {
+          font-size: 1.6rem;
+        }
+        .controls {
+          padding: 1rem 1.2rem;
+        }
+        .table-wrap {
+          padding: 0 1.2rem 3rem;
+        }
+        .status-bar {
+          padding: 0.5rem 1.2rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <div class="header-title">Imóveis <span>Tubarão</span></div>
+        <div class="header-sub" style="margin-top: 6px">
+          Agregador de imóveis · SC
+        </div>
+      </div>
+    </header>
+
+    <div class="controls" id="controls">
+      <div class="control-group">
+        <label>Cidade</label>
+        <input
+          id="filter-city"
+          type="text"
+          placeholder="ex: Tubarão"
+          value="Tubarão"
+        />
+      </div>
+      <div class="control-group">
+        <label>Quartos</label>
+        <select id="filter-bedrooms">
+          <option value="">Todos</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4+</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Preço mín.</label>
+        <input
+          id="filter-min-price"
+          type="number"
+          placeholder="ex: 150000"
+          style="min-width: 120px"
+        />
+      </div>
+      <div class="control-group">
+        <label>Preço máx.</label>
+        <input
+          id="filter-max-price"
+          type="number"
+          placeholder="ex: 500000"
+          style="min-width: 120px"
+        />
+      </div>
+      <div class="controls-right">
+        <button class="btn btn-ghost" id="btn-clear">Limpar</button>
+        <button class="btn btn-primary" id="btn-search">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+          Buscar
+        </button>
+      </div>
+    </div>
+
+    <div class="status-bar" id="status-bar">
+      <span id="status-text">Clique em Buscar para carregar imóveis.</span>
+      <span id="status-api" style="font-size: 0.72rem"
+        >API: <code>http://localhost:8000</code></span
+      >
+    </div>
+
+    <div id="error-area"></div>
+    <div class="table-wrap">
+      <div id="table-container"></div>
+    </div>
+    <div class="pagination" id="pagination"></div>
+
+    <script>
+      // ── CONFIG ──────────────────────────────────────────────────────────
+      const API_BASE = "http://localhost:8000";
+      const PAGE_SIZE = 30;
+
+      // ── STATE ────────────────────────────────────────────────────────────
+      let allData = [];
+      let sortKey = "price";
+      let sortDir = "asc"; // 'asc' | 'desc'
+      let currentPage = 1;
+      let loading = false;
+
+      // ── DOM REFS ─────────────────────────────────────────────────────────
+      const statusText = document.getElementById("status-text");
+      const errorArea = document.getElementById("error-area");
+      const tableContainer = document.getElementById("table-container");
+      const paginationEl = document.getElementById("pagination");
+
+      // ── FETCH ─────────────────────────────────────────────────────────────
+      async function fetchProperties() {
+        if (loading) return;
+        loading = true;
+
+        const city = document.getElementById("filter-city").value.trim();
+        const bedrooms = document.getElementById("filter-bedrooms").value;
+        const minPrice = document.getElementById("filter-min-price").value;
+        const maxPrice = document.getElementById("filter-max-price").value;
+
+        const params = new URLSearchParams();
+        if (city) params.set("city", city);
+        if (bedrooms && bedrooms !== "4+") params.set("bedrooms", bedrooms);
+        if (minPrice) params.set("min_price", minPrice);
+        if (maxPrice) params.set("max_price", maxPrice);
+
+        setStatus('<span class="loading-dot"></span> Carregando…', false);
+        errorArea.innerHTML = "";
+
+        try {
+          const url = `${API_BASE}/properties?${params.toString()}`;
+          const resp = await fetch(url);
+          if (!resp.ok)
+            throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+          let data = await resp.json();
+
+          // Client-side: if bedrooms=4+, include >=4
+          if (bedrooms === "4+") {
+            data = data.filter((p) => p.bedrooms != null && p.bedrooms >= 4);
+          }
+
+          allData = data;
+          currentPage = 1;
+          renderTable();
+          setStatus(
+            `<b>${allData.length}</b> imóve${
+              allData.length === 1 ? "l" : "is"
+            } encontrado${allData.length === 1 ? "" : "s"}`,
+            false,
+          );
+        } catch (err) {
+          console.error(err);
+          errorArea.innerHTML = `<div class="error-banner">
+        <b>Erro ao buscar imóveis:</b> ${err.message}<br>
+        <small>Verifique se o servidor está rodando em <code>${API_BASE}</code></small>
+      </div>`;
+          setStatus("Erro ao carregar.", false);
+          allData = [];
+          renderTable();
+        } finally {
+          loading = false;
+        }
+      }
+
+      function setStatus(html, withDot) {
+        statusText.innerHTML = html;
+      }
+
+      // ── SORT ─────────────────────────────────────────────────────────────
+      function sortData(data) {
+        const d = [...data];
+        d.sort((a, b) => {
+          let av = a[sortKey];
+          let bv = b[sortKey];
+
+          // nulls last
+          if (av == null && bv == null) return 0;
+          if (av == null) return 1;
+          if (bv == null) return -1;
+
+          if (typeof av === "string") av = av.toLowerCase();
+          if (typeof bv === "string") bv = bv.toLowerCase();
+
+          if (av < bv) return sortDir === "asc" ? -1 : 1;
+          if (av > bv) return sortDir === "asc" ? 1 : -1;
+          return 0;
+        });
+        return d;
+      }
+
+      function setSort(key) {
+        if (sortKey === key) {
+          sortDir = sortDir === "asc" ? "desc" : "asc";
+        } else {
+          sortKey = key;
+          sortDir = "asc";
+        }
+        currentPage = 1;
+        renderTable();
+      }
+
+      // ── FORMAT HELPERS ────────────────────────────────────────────────────
+      function fmtPrice(v) {
+        if (v == null) return '<span class="price-null">—</span>';
+        return `<span class="price">R$ ${Number(v).toLocaleString("pt-BR", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        })}</span>`;
+      }
+
+      function fmtArea(v) {
+        if (v == null) return '<span class="null-dash">—</span>';
+        return `${Number(v).toLocaleString("pt-BR", {
+          maximumFractionDigits: 0,
+        })} m²`;
+      }
+
+      function fmtInt(v, icon) {
+        if (v == null) return '<span class="null-dash">—</span>';
+        return `${icon ? icon + " " : ""}${v}`;
+      }
+
+      // ── RENDER TABLE ──────────────────────────────────────────────────────
+      const COLUMNS = [
+        { key: "title", label: "Imóvel", sortable: false },
+        { key: "price", label: "Preço", sortable: true },
+        { key: "area", label: "Área", sortable: true },
+        { key: "bedrooms", label: "Quartos", sortable: true },
+        { key: "bathrooms", label: "Banheiros", sortable: true },
+        { key: "parking", label: "Vagas", sortable: true },
+        { key: "neighborhood", label: "Bairro", sortable: true },
+        { key: "city", label: "Cidade", sortable: true },
+        { key: "agency", label: "Imobiliária", sortable: true },
+        { key: "_link", label: "Ver", sortable: false },
+      ];
+
+      function renderTable() {
+        const sorted = sortData(allData);
+        const totalPages = Math.ceil(sorted.length / PAGE_SIZE) || 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        const start = (currentPage - 1) * PAGE_SIZE;
+        const pageData = sorted.slice(start, start + PAGE_SIZE);
+
+        if (sorted.length === 0) {
+          tableContainer.innerHTML = `
+        <div class="empty-state">
+          <div class="big">Nenhum imóvel</div>
+          <p>Tente outros filtros ou clique em Buscar.</p>
+        </div>`;
+          paginationEl.innerHTML = "";
+          return;
+        }
+
+        // Header
+        const headCells = COLUMNS.map((col) => {
+          let cls = col.sortable ? "sortable" : "";
+          if (col.sortable && sortKey === col.key)
+            cls += sortDir === "asc" ? " sort-asc" : " sort-desc";
+          const click = col.sortable ? `onclick="setSort('${col.key}')"` : "";
+          return `<th class="${cls}" ${click}>${col.label}${
+            col.sortable ? '<span class="sort-icon"></span>' : ""
+          }</th>`;
+        }).join("");
+
+        // Rows
+        const rows = pageData
+          .map((p, i) => {
+            const delay = i * 15 + "ms";
+            return `<tr style="animation-delay:${delay}">
+        <td class="title-cell">
+          <div class="listing-title">${esc(p.title || "–")}</div>
+          <div class="listing-agency">${esc(p.agency)}</div>
+        </td>
+        <td>${fmtPrice(p.price)}</td>
+        <td>${fmtArea(p.area)}</td>
+        <td>${fmtInt(p.bedrooms)}</td>
+        <td>${fmtInt(p.bathrooms)}</td>
+        <td>${fmtInt(p.parking)}</td>
+        <td>${
+          p.neighborhood
+            ? `<span class="tag">${esc(p.neighborhood)}</span>`
+            : '<span class="null-dash">—</span>'
+        }</td>
+        <td>${p.city ? esc(p.city) : '<span class="null-dash">—</span>'}</td>
+        <td><span class="badge">${esc(p.agency)}</span></td>
+        <td><a class="link" href="${esc(
+          p.url,
+        )}" target="_blank" rel="noopener">Ver →</a></td>
+      </tr>`;
+          })
+          .join("");
+
+        tableContainer.innerHTML = `
+      <table>
+        <thead><tr>${headCells}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+
+        renderPagination(totalPages);
+      }
+
+      function renderPagination(totalPages) {
+        if (totalPages <= 1) {
+          paginationEl.innerHTML = "";
+          return;
+        }
+        let html = "";
+
+        html += `<button class="page-btn" ${
+          currentPage === 1 ? "disabled" : ""
+        } onclick="goPage(${currentPage - 1})">‹</button>`;
+
+        // Show smart page range
+        const range = [];
+        for (let i = 1; i <= totalPages; i++) {
+          if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 2) {
+            range.push(i);
+          } else if (range[range.length - 1] !== "…") {
+            range.push("…");
+          }
+        }
+
+        range.forEach((p) => {
+          if (p === "…") {
+            html += `<span style="padding:0 4px;color:var(--ink-muted)">…</span>`;
+          } else {
+            html += `<button class="page-btn ${
+              p === currentPage ? "active" : ""
+            }" onclick="goPage(${p})">${p}</button>`;
+          }
+        });
+
+        html += `<button class="page-btn" ${
+          currentPage === totalPages ? "disabled" : ""
+        } onclick="goPage(${currentPage + 1})">›</button>`;
+        paginationEl.innerHTML = html;
+      }
+
+      function goPage(n) {
+        currentPage = n;
+        renderTable();
+        window.scrollTo({
+          top: document.querySelector(".table-wrap").offsetTop - 60,
+          behavior: "smooth",
+        });
+      }
+
+      function esc(s) {
+        if (!s) return "";
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      // ── EVENTS ─────────────────────────────────────────────────────────────
+      document
+        .getElementById("btn-search")
+        .addEventListener("click", fetchProperties);
+      document.getElementById("btn-clear").addEventListener("click", () => {
+        document.getElementById("filter-city").value = "";
+        document.getElementById("filter-bedrooms").value = "";
+        document.getElementById("filter-min-price").value = "";
+        document.getElementById("filter-max-price").value = "";
+      });
+
+      // Enter key on inputs
+      document
+        .querySelectorAll("#controls input, #controls select")
+        .forEach((el) => {
+          el.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") fetchProperties();
+          });
+        });
+
+      // Auto-load on open
+      fetchProperties();
+    </script>
+  </body>
+</html>
