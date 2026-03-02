@@ -19,7 +19,7 @@ Running locally:
 
 Endpoint:
     GET http://localhost:8000/properties
-    GET http://localhost:8000/properties?city=Tubar%C3%A3o&min_price=200000&max_price=500000&bedrooms=2
+    GET http://localhost:8000/properties?city=Tubar%C3%A3o&max_price=320000&min_bedrooms=1&min_bathrooms=1&min_parking=1&min_area=50
 """
 
 import logging
@@ -35,10 +35,6 @@ from config.settings import settings
 from scrapers.base import AgencyScraper
 from services.aggregator import Aggregator
 
-# ---------------------------------------------------------------------------
-# Logging
-# ---------------------------------------------------------------------------
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
@@ -46,33 +42,51 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Scraper registry
-#
-# Maps each agency name (must match AgencyConfig.name in settings.py) to its
-# scraper class. Add one entry here for every implemented scraper.
-#
-# The API will only instantiate scrapers whose name also appears in
-# settings.agencies — unregistered agencies are silently skipped at startup.
-# ---------------------------------------------------------------------------
-
+from scrapers.bilcomimoveis import BilcomImoveisScraper
+from scrapers.bitimoveis import BitImoveisScraper
+from scrapers.carlosmarques import CarlosMarquesScraper
 from scrapers.citymoveis import CityMoveisScraper
+from scrapers.conquistaimoveis import ConquistaImoveisScraper
+from scrapers.conquistalarimoveis import ConquistalarImoveisScraper
+from scrapers.correbens import CorrebensScraper
+from scrapers.dubettuimoveis import DubettuImoveisScraper
+from scrapers.imobicasa import ImobicasaScraper
+from scrapers.imobiliariaacacia import ImobiliariaAcaciaScraper
+from scrapers.imobiliariaaqui import ImobiliariaAquiScraper
+from scrapers.juliocorretor import JulioCorretorScraper
 from scrapers.keyonimoveis import KeyOnImoveisScraper
 from scrapers.larroydimoveis import LarroyImoveisScraper
+from scrapers.litoralsulimoveis import LitoralSulImoveisScraper
+from scrapers.loteazul import LoteAzulScraper
+from scrapers.moradaimoveis import MoradaImoveisScraper
+from scrapers.pauloemayer import PauloEMayerScraper
+from scrapers.rfnegocios import RFNegociosScraper
+from scrapers.sittuarimoveis import SittuarImoveisScraper
+from scrapers.vendimoveis import VendimoveisScraper
 
 SCRAPER_REGISTRY: dict[str, type[AgencyScraper]] = {
     "keyonimoveis": KeyOnImoveisScraper,
     "larroydimoveis": LarroyImoveisScraper,
     "citymoveis": CityMoveisScraper,
-    # Add new scrapers here as they are implemented:
-    # "sittuarimoveis": SittuariMoveisScraper,
-    # "bilcomimoveis": BilcomiImoveisScraper,
-    # ...
+    "sittuarimoveis": SittuarImoveisScraper,
+    "bilcomimoveis": BilcomImoveisScraper,
+    "bitimoveis": BitImoveisScraper,
+    "imobiliariaaqui": ImobiliariaAquiScraper,
+    "imobiliariaacacia": ImobiliariaAcaciaScraper,
+    "vendimoveis": VendimoveisScraper,
+    "loteazul": LoteAzulScraper,
+    "correbens": CorrebensScraper,
+    "moradaimoveis": MoradaImoveisScraper,
+    "conquistalarimoveis": ConquistalarImoveisScraper,
+    "litoralsulimoveis": LitoralSulImoveisScraper,
+    "juliocorretor": JulioCorretorScraper,
+    "imobicasa": ImobicasaScraper,
+    "conquistaimoveis": ConquistaImoveisScraper,
+    "carlosmarques": CarlosMarquesScraper,
+    "rfnegocios": RFNegociosScraper,
+    "dubettuimoveis": DubettuImoveisScraper,
+    "pauloemayer": PauloEMayerScraper,
 }
-
-# ---------------------------------------------------------------------------
-# Application state
-# ---------------------------------------------------------------------------
 
 class _AppState:
     aggregator: Optional[Aggregator] = None
@@ -81,19 +95,8 @@ class _AppState:
 _state = _AppState()
 
 
-# ---------------------------------------------------------------------------
-# Lifespan — build scrapers once at startup
-# ---------------------------------------------------------------------------
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Builds the Aggregator from settings + registry at startup.
-
-    Only agencies that have both a config in settings.agencies AND a class in
-    SCRAPER_REGISTRY are included. This means partially-implemented deployments
-    work without errors — missing scrapers are simply not run.
-    """
     config_by_name = {cfg.name: cfg for cfg in settings.agencies}
 
     scrapers: list[AgencyScraper] = []
@@ -118,14 +121,9 @@ async def lifespan(app: FastAPI):
         settings.max_workers,
     )
 
-    yield  # application runs here
+    yield
 
     logger.info("[shutdown] Application shutting down.")
-
-
-# ---------------------------------------------------------------------------
-# FastAPI app
-# ---------------------------------------------------------------------------
 
 app = FastAPI(
     title="Real Estate Aggregator",
@@ -144,19 +142,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# ---------------------------------------------------------------------------
-# Response schema
-# ---------------------------------------------------------------------------
-
 class PropertyResponse(BaseModel):
-    """
-    JSON representation of a normalized Property.
-
-    Mirrors the Property dataclass exactly so the API contract is explicit
-    and validated by Pydantic on every response.
-    """
-
     agency: str
     title: str
     url: str
@@ -168,19 +154,13 @@ class PropertyResponse(BaseModel):
     neighborhood: Optional[str] = None
     city: Optional[str] = None
 
-
-# ---------------------------------------------------------------------------
-# Endpoints
-# ---------------------------------------------------------------------------
-
 @app.get(
     "/properties",
     response_model=list[PropertyResponse],
     summary="List all aggregated property listings",
     description=(
         "Runs all registered scrapers, merges the results, and returns the "
-        "unified list. Optional query parameters narrow the results **after** "
-        "aggregation — no filters are passed to individual scrapers."
+        "unified list. Optional query parameters narrow the results after aggregation."
     ),
 )
 def get_properties(
@@ -197,25 +177,38 @@ def get_properties(
     max_price: Optional[float] = Query(
         default=None,
         ge=0,
-        description="Maximum listing price (inclusive).",
+        description="Maximum listing price (inclusive). Default target: 320000.",
     ),
-    bedrooms: Optional[int] = Query(
+    min_bedrooms: Optional[int] = Query(
         default=None,
         ge=0,
-        description="Exact number of bedrooms.",
+        description="Minimum number of bedrooms (inclusive).",
+    ),
+    min_bathrooms: Optional[int] = Query(
+        default=None,
+        ge=0,
+        description="Minimum number of bathrooms (inclusive).",
+    ),
+    min_parking: Optional[int] = Query(
+        default=None,
+        ge=0,
+        description="Minimum number of parking spots (inclusive).",
+    ),
+    min_area: Optional[float] = Query(
+        default=None,
+        ge=0,
+        description="Minimum area in m² (inclusive). Typical minimum: 50.",
+    ),
+    max_area: Optional[float] = Query(
+        default=None,
+        ge=0,
+        description="Maximum area in m² (inclusive).",
     ),
 ) -> list[PropertyResponse]:
     if _state.aggregator is None:
-        # Should never happen after startup, but guard defensively.
         raise HTTPException(status_code=503, detail="Aggregator not initialised.")
 
     properties = _state.aggregator.collect()
-
-    # ------------------------------------------------------------------
-    # Filtering — applied here, not inside scrapers or the aggregator.
-    # All comparisons are None-safe: a listing with a missing value for a
-    # filtered field is excluded when the caller supplies that filter.
-    # ------------------------------------------------------------------
 
     if city is not None:
         city_lower = city.lower()
@@ -236,15 +229,42 @@ def get_properties(
             if p.price is not None and p.price <= max_price
         ]
 
-    if bedrooms is not None:
+    if min_bedrooms is not None:
         properties = [
             p for p in properties
-            if p.bedrooms is not None and p.bedrooms == bedrooms
+            if p.bedrooms is not None and p.bedrooms >= min_bedrooms
+        ]
+
+    if min_bathrooms is not None:
+        properties = [
+            p for p in properties
+            if p.bathrooms is not None and p.bathrooms >= min_bathrooms
+        ]
+
+    if min_parking is not None:
+        properties = [
+            p for p in properties
+            if p.parking is not None and p.parking >= min_parking
+        ]
+
+    if min_area is not None:
+        properties = [
+            p for p in properties
+            if p.area is not None and p.area >= min_area
+        ]
+
+    if max_area is not None:
+        properties = [
+            p for p in properties
+            if p.area is not None and p.area <= max_area
         ]
 
     logger.info(
-        "[GET /properties] city=%r min_price=%s max_price=%s bedrooms=%s → %d result(s)",
-        city, min_price, max_price, bedrooms, len(properties),
+        "[GET /properties] city=%r min_price=%s max_price=%s "
+        "min_bedrooms=%s min_bathrooms=%s min_parking=%s min_area=%s → %d result(s)",
+        city, min_price, max_price,
+        min_bedrooms, min_bathrooms, min_parking, min_area,
+        len(properties),
     )
 
     return [PropertyResponse(**p.to_dict()) for p in properties]
@@ -252,6 +272,5 @@ def get_properties(
 
 @app.get("/health", include_in_schema=False)
 def health() -> dict:
-    """Simple liveness probe — always returns 200 if the process is up."""
     scraper_count = len(_state.aggregator.scrapers) if _state.aggregator else 0
     return {"status": "ok", "scrapers_registered": scraper_count}

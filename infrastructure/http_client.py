@@ -23,16 +23,10 @@ logger = logging.getLogger(__name__)
 
 
 class HttpClientError(Exception):
-    """Base exception for HTTP client errors."""
-
 
 class HttpTimeoutError(HttpClientError):
-    """Raised when a request times out."""
-
 
 class HttpStatusError(HttpClientError):
-    """Raised when the server returns an error status code."""
-
     def __init__(self, status_code: int, url: str) -> None:
         self.status_code = status_code
         self.url = url
@@ -40,8 +34,6 @@ class HttpStatusError(HttpClientError):
 
 
 class HttpConnectionError(HttpClientError):
-    """Raised when the connection cannot be established."""
-
 
 class HttpClient:
     """
@@ -73,10 +65,6 @@ class HttpClient:
         )
         if headers:
             self._session.headers.update(headers)
-
-    # ------------------------------------------------------------------
-    # Public interface
-    # ------------------------------------------------------------------
 
     def get(self, url: str, params: Optional[dict[str, Any]] = None) -> str:
         """
@@ -124,19 +112,11 @@ class HttpClient:
         """Closes the underlying requests session and releases resources."""
         self._session.close()
 
-    # ------------------------------------------------------------------
-    # Context manager support
-    # ------------------------------------------------------------------
-
     def __enter__(self) -> "HttpClient":
         return self
 
     def __exit__(self, *_: Any) -> None:
         self.close()
-
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
 
     def _request(
         self,

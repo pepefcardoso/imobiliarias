@@ -23,16 +23,10 @@ logger = logging.getLogger(__name__)
 
 
 class BrowserClientError(Exception):
-    """Base exception for browser client errors."""
-
 
 class BrowserTimeoutError(BrowserClientError):
-    """Raised when a page load or action exceeds the configured timeout."""
-
 
 class BrowserNavigationError(BrowserClientError):
-    """Raised when navigation to a URL fails."""
-
 
 class BrowserClient:
     """
@@ -72,14 +66,8 @@ class BrowserClient:
         self._timeout_ms = timeout_ms or (settings.request_timeout * 1000)
         self._user_agent = user_agent or settings.user_agent
         self._headless = headless
-
-        # Lazily initialised
         self._playwright: Any = None
         self._browser: Any = None
-
-    # ------------------------------------------------------------------
-    # Public interface
-    # ------------------------------------------------------------------
 
     def get(self, url: str, wait_for: Optional[str] = None) -> str:
         """
@@ -127,7 +115,6 @@ class BrowserClient:
             return element.inner_text()
 
     def close(self) -> None:
-        """Closes the browser and stops the Playwright instance."""
         if self._browser is not None:
             try:
                 self._browser.close()
@@ -142,27 +129,18 @@ class BrowserClient:
                 pass
             self._playwright = None
 
-    # ------------------------------------------------------------------
-    # Context manager support
-    # ------------------------------------------------------------------
-
     def __enter__(self) -> "BrowserClient":
         return self
 
     def __exit__(self, *_: Any) -> None:
         self.close()
 
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
-
     def _ensure_browser(self) -> None:
-        """Lazily starts Playwright and launches a headless Chromium browser."""
         if self._browser is not None:
             return
 
         try:
-            from playwright.sync_api import sync_playwright  # noqa: PLC0415
+            from playwright.sync_api import sync_playwright
         except ImportError as exc:
             raise BrowserClientError(
                 "Playwright is not installed. "
@@ -178,7 +156,6 @@ class BrowserClient:
 
     @contextmanager
     def _page(self) -> Generator[Any, None, None]:
-        """Context manager that opens a new browser page and closes it afterwards."""
         self._ensure_browser()
         context = self._browser.new_context(
             user_agent=self._user_agent,
@@ -196,7 +173,6 @@ class BrowserClient:
                 pass
 
     def _navigate(self, page: Any, url: str) -> None:
-        """Navigates *page* to *url*, translating Playwright errors."""
         logger.debug("Browser GET → %s (timeout=%sms)", url, self._timeout_ms)
         try:
             response = page.goto(url, wait_until="load", timeout=self._timeout_ms)
@@ -216,7 +192,6 @@ class BrowserClient:
         logger.debug("Browser GET ← %s %s", response.status if response else "?", url)
 
     def _wait_for_selector(self, page: Any, url: str, selector: str) -> None:
-        """Waits for *selector* to appear on *page*, translating Playwright errors."""
         try:
             page.wait_for_selector(selector, timeout=self._timeout_ms)
         except Exception as exc:

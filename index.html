@@ -88,6 +88,21 @@
         border-bottom: 1px solid var(--border);
       }
 
+      .controls-section {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: flex-end;
+      }
+
+      .controls-divider {
+        width: 1px;
+        height: 38px;
+        background: var(--border);
+        align-self: flex-end;
+        margin: 0 0.25rem;
+      }
+
       .control-group {
         display: flex;
         flex-direction: column;
@@ -114,7 +129,7 @@
         font-size: 0.9rem;
         transition: border-color 0.15s;
         outline: none;
-        min-width: 140px;
+        min-width: 100px;
       }
 
       .control-group input:focus,
@@ -141,7 +156,6 @@
         background: var(--accent);
         color: #fff;
       }
-
       .btn-primary:hover {
         background: #a84215;
       }
@@ -154,7 +168,6 @@
         border: 1px solid var(--border);
         color: var(--ink-muted);
       }
-
       .btn-ghost:hover {
         border-color: var(--ink-muted);
         color: var(--ink);
@@ -165,6 +178,35 @@
         display: flex;
         align-items: flex-end;
         gap: 0.5rem;
+      }
+
+      /* ── ACTIVE FILTERS PILL BAR ── */
+      .filter-summary {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        align-items: center;
+        padding: 0.55rem 2.5rem;
+        background: var(--accent-lt);
+        border-bottom: 1px solid #e8d0c4;
+        font-size: 0.75rem;
+        color: var(--accent);
+      }
+
+      .filter-summary span {
+        font-weight: 500;
+      }
+
+      .filter-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: #fff;
+        border: 1px solid #e8c4b0;
+        border-radius: 20px;
+        padding: 2px 8px;
+        font-size: 0.72rem;
+        color: var(--accent);
       }
 
       /* ── STATUS BAR ── */
@@ -354,7 +396,6 @@
         font-size: 0.78rem;
         font-weight: 500;
       }
-
       a.link:hover {
         text-decoration: underline;
       }
@@ -438,6 +479,12 @@
         .status-bar {
           padding: 0.5rem 1.2rem;
         }
+        .filter-summary {
+          padding: 0.5rem 1.2rem;
+        }
+        .controls-divider {
+          display: none;
+        }
       }
     </style>
   </head>
@@ -452,43 +499,99 @@
     </header>
 
     <div class="controls" id="controls">
-      <div class="control-group">
-        <label>Cidade</label>
-        <input
-          id="filter-city"
-          type="text"
-          placeholder="ex: Tubarão"
-          value="Tubarão"
-        />
+      <div class="controls-section">
+        <div class="control-group">
+          <label>Cidade</label>
+          <input
+            id="filter-city"
+            type="text"
+            placeholder="ex: Tubarão"
+            value="Tubarão"
+            style="min-width: 120px"
+          />
+        </div>
       </div>
-      <div class="control-group">
-        <label>Quartos</label>
-        <select id="filter-bedrooms">
-          <option value="">Todos</option>
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4+</option>
-        </select>
+
+      <div class="controls-divider"></div>
+
+      <div class="controls-section">
+        <div class="control-group">
+          <label>Preço mín.</label>
+          <input
+            id="filter-min-price"
+            type="number"
+            placeholder="0"
+            style="min-width: 110px"
+          />
+        </div>
+        <div class="control-group">
+          <label>Preço máx.</label>
+          <input
+            id="filter-max-price"
+            type="number"
+            placeholder="320000"
+            value="320000"
+            style="min-width: 110px"
+          />
+        </div>
       </div>
-      <div class="control-group">
-        <label>Preço mín.</label>
-        <input
-          id="filter-min-price"
-          type="number"
-          placeholder="ex: 150000"
-          style="min-width: 120px"
-        />
+
+      <div class="controls-divider"></div>
+
+      <div class="controls-section">
+        <div class="control-group">
+          <label>Quartos mín.</label>
+          <select id="filter-bedrooms">
+            <option value="">Todos</option>
+            <option value="1" selected>1+</option>
+            <option value="2">2+</option>
+            <option value="3">3+</option>
+            <option value="4">4+</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Banheiros mín.</label>
+          <select id="filter-bathrooms">
+            <option value="">Todos</option>
+            <option value="1" selected>1+</option>
+            <option value="2">2+</option>
+            <option value="3">3+</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Vagas mín.</label>
+          <select id="filter-parking">
+            <option value="">Todos</option>
+            <option value="1" selected>1+</option>
+            <option value="2">2+</option>
+          </select>
+        </div>
       </div>
-      <div class="control-group">
-        <label>Preço máx.</label>
-        <input
-          id="filter-max-price"
-          type="number"
-          placeholder="ex: 500000"
-          style="min-width: 120px"
-        />
+
+      <div class="controls-divider"></div>
+
+      <div class="controls-section">
+        <div class="control-group">
+          <label>Área mín. (m²)</label>
+          <input
+            id="filter-min-area"
+            type="number"
+            placeholder="50"
+            value="50"
+            style="min-width: 90px"
+          />
+        </div>
+        <div class="control-group">
+          <label>Área máx. (m²)</label>
+          <input
+            id="filter-max-area"
+            type="number"
+            placeholder="Sem limite"
+            style="min-width: 90px"
+          />
+        </div>
       </div>
+
       <div class="controls-right">
         <button class="btn btn-ghost" id="btn-clear">Limpar</button>
         <button class="btn btn-primary" id="btn-search">
@@ -508,6 +611,8 @@
       </div>
     </div>
 
+    <div class="filter-summary" id="filter-summary" style="display: none"></div>
+
     <div class="status-bar" id="status-bar">
       <span id="status-text">Clique em Buscar para carregar imóveis.</span>
       <span id="status-api" style="font-size: 0.72rem"
@@ -522,70 +627,77 @@
     <div class="pagination" id="pagination"></div>
 
     <script>
-      // ── CONFIG ──────────────────────────────────────────────────────────
       const API_BASE = "http://localhost:8000";
       const PAGE_SIZE = 30;
 
-      // ── STATE ────────────────────────────────────────────────────────────
       let allData = [];
       let sortKey = "price";
-      let sortDir = "asc"; // 'asc' | 'desc'
+      let sortDir = "asc";
       let currentPage = 1;
       let loading = false;
 
-      // ── DOM REFS ─────────────────────────────────────────────────────────
       const statusText = document.getElementById("status-text");
       const errorArea = document.getElementById("error-area");
       const tableContainer = document.getElementById("table-container");
       const paginationEl = document.getElementById("pagination");
+      const filterSummaryEl = document.getElementById("filter-summary");
 
-      // ── FETCH ─────────────────────────────────────────────────────────────
       async function fetchProperties() {
         if (loading) return;
         loading = true;
 
         const city = document.getElementById("filter-city").value.trim();
         const bedrooms = document.getElementById("filter-bedrooms").value;
+        const bathrooms = document.getElementById("filter-bathrooms").value;
+        const parking = document.getElementById("filter-parking").value;
         const minPrice = document.getElementById("filter-min-price").value;
         const maxPrice = document.getElementById("filter-max-price").value;
+        const minArea = document.getElementById("filter-min-area").value;
+        const maxArea = document.getElementById("filter-max-area").value;
 
         const params = new URLSearchParams();
         if (city) params.set("city", city);
-        if (bedrooms && bedrooms !== "4+") params.set("bedrooms", bedrooms);
+        if (bedrooms) params.set("min_bedrooms", bedrooms);
+        if (bathrooms) params.set("min_bathrooms", bathrooms);
+        if (parking) params.set("min_parking", parking);
         if (minPrice) params.set("min_price", minPrice);
         if (maxPrice) params.set("max_price", maxPrice);
+        if (minArea) params.set("min_area", minArea);
+        if (maxArea) params.set("max_area", maxArea);
 
-        setStatus('<span class="loading-dot"></span> Carregando…', false);
+        setStatus('<span class="loading-dot"></span> Carregando…');
         errorArea.innerHTML = "";
+        renderFilterSummary({
+          city,
+          bedrooms,
+          bathrooms,
+          parking,
+          minPrice,
+          maxPrice,
+          minArea,
+          maxArea,
+        });
 
         try {
           const url = `${API_BASE}/properties?${params.toString()}`;
           const resp = await fetch(url);
           if (!resp.ok)
             throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
-          let data = await resp.json();
-
-          // Client-side: if bedrooms=4+, include >=4
-          if (bedrooms === "4+") {
-            data = data.filter((p) => p.bedrooms != null && p.bedrooms >= 4);
-          }
-
-          allData = data;
+          allData = await resp.json();
           currentPage = 1;
           renderTable();
           setStatus(
             `<b>${allData.length}</b> imóve${
               allData.length === 1 ? "l" : "is"
             } encontrado${allData.length === 1 ? "" : "s"}`,
-            false,
           );
         } catch (err) {
           console.error(err);
           errorArea.innerHTML = `<div class="error-banner">
-        <b>Erro ao buscar imóveis:</b> ${err.message}<br>
-        <small>Verifique se o servidor está rodando em <code>${API_BASE}</code></small>
-      </div>`;
-          setStatus("Erro ao carregar.", false);
+            <b>Erro ao buscar imóveis:</b> ${err.message}<br>
+            <small>Verifique se o servidor está rodando em <code>${API_BASE}</code></small>
+          </div>`;
+          setStatus("Erro ao carregar.");
           allData = [];
           renderTable();
         } finally {
@@ -593,25 +705,52 @@
         }
       }
 
-      function setStatus(html, withDot) {
+      function setStatus(html) {
         statusText.innerHTML = html;
       }
 
-      // ── SORT ─────────────────────────────────────────────────────────────
+      function renderFilterSummary({
+        city,
+        bedrooms,
+        bathrooms,
+        parking,
+        minPrice,
+        maxPrice,
+        minArea,
+        maxArea,
+      }) {
+        const pills = [];
+        if (city) pills.push(`📍 ${city}`);
+        if (maxPrice)
+          pills.push(`💰 até R$ ${Number(maxPrice).toLocaleString("pt-BR")}`);
+        if (minPrice)
+          pills.push(`💰 mín. R$ ${Number(minPrice).toLocaleString("pt-BR")}`);
+        if (bedrooms) pills.push(`🛏 ${bedrooms}+ quartos`);
+        if (bathrooms) pills.push(`🚿 ${bathrooms}+ banheiros`);
+        if (parking) pills.push(`🅿️ ${parking}+ vagas`);
+        if (minArea) pills.push(`📐 mín. ${minArea} m²`);
+        if (maxArea) pills.push(`📐 máx. ${maxArea} m²`);
+
+        if (pills.length === 0) {
+          filterSummaryEl.style.display = "none";
+          return;
+        }
+        filterSummaryEl.style.display = "flex";
+        filterSummaryEl.innerHTML =
+          `<span>Filtros ativos:</span>` +
+          pills.map((p) => `<span class="filter-pill">${p}</span>`).join("");
+      }
+
       function sortData(data) {
         const d = [...data];
         d.sort((a, b) => {
-          let av = a[sortKey];
-          let bv = b[sortKey];
-
-          // nulls last
+          let av = a[sortKey],
+            bv = b[sortKey];
           if (av == null && bv == null) return 0;
           if (av == null) return 1;
           if (bv == null) return -1;
-
           if (typeof av === "string") av = av.toLowerCase();
           if (typeof bv === "string") bv = bv.toLowerCase();
-
           if (av < bv) return sortDir === "asc" ? -1 : 1;
           if (av > bv) return sortDir === "asc" ? 1 : -1;
           return 0;
@@ -630,7 +769,6 @@
         renderTable();
       }
 
-      // ── FORMAT HELPERS ────────────────────────────────────────────────────
       function fmtPrice(v) {
         if (v == null) return '<span class="price-null">—</span>';
         return `<span class="price">R$ ${Number(v).toLocaleString("pt-BR", {
@@ -646,12 +784,11 @@
         })} m²`;
       }
 
-      function fmtInt(v, icon) {
+      function fmtInt(v) {
         if (v == null) return '<span class="null-dash">—</span>';
-        return `${icon ? icon + " " : ""}${v}`;
+        return `${v}`;
       }
 
-      // ── RENDER TABLE ──────────────────────────────────────────────────────
       const COLUMNS = [
         { key: "title", label: "Imóvel", sortable: false },
         { key: "price", label: "Preço", sortable: true },
@@ -675,15 +812,14 @@
 
         if (sorted.length === 0) {
           tableContainer.innerHTML = `
-        <div class="empty-state">
-          <div class="big">Nenhum imóvel</div>
-          <p>Tente outros filtros ou clique em Buscar.</p>
-        </div>`;
+            <div class="empty-state">
+              <div class="big">Nenhum imóvel</div>
+              <p>Tente outros filtros ou clique em Buscar.</p>
+            </div>`;
           paginationEl.innerHTML = "";
           return;
         }
 
-        // Header
         const headCells = COLUMNS.map((col) => {
           let cls = col.sortable ? "sortable" : "";
           if (col.sortable && sortKey === col.key)
@@ -694,39 +830,40 @@
           }</th>`;
         }).join("");
 
-        // Rows
         const rows = pageData
           .map((p, i) => {
             const delay = i * 15 + "ms";
             return `<tr style="animation-delay:${delay}">
-        <td class="title-cell">
-          <div class="listing-title">${esc(p.title || "–")}</div>
-          <div class="listing-agency">${esc(p.agency)}</div>
-        </td>
-        <td>${fmtPrice(p.price)}</td>
-        <td>${fmtArea(p.area)}</td>
-        <td>${fmtInt(p.bedrooms)}</td>
-        <td>${fmtInt(p.bathrooms)}</td>
-        <td>${fmtInt(p.parking)}</td>
-        <td>${
-          p.neighborhood
-            ? `<span class="tag">${esc(p.neighborhood)}</span>`
-            : '<span class="null-dash">—</span>'
-        }</td>
-        <td>${p.city ? esc(p.city) : '<span class="null-dash">—</span>'}</td>
-        <td><span class="badge">${esc(p.agency)}</span></td>
-        <td><a class="link" href="${esc(
-          p.url,
-        )}" target="_blank" rel="noopener">Ver →</a></td>
-      </tr>`;
+            <td class="title-cell">
+              <div class="listing-title">${esc(p.title || "–")}</div>
+              <div class="listing-agency">${esc(p.agency)}</div>
+            </td>
+            <td>${fmtPrice(p.price)}</td>
+            <td>${fmtArea(p.area)}</td>
+            <td>${fmtInt(p.bedrooms)}</td>
+            <td>${fmtInt(p.bathrooms)}</td>
+            <td>${fmtInt(p.parking)}</td>
+            <td>${
+              p.neighborhood
+                ? `<span class="tag">${esc(p.neighborhood)}</span>`
+                : '<span class="null-dash">—</span>'
+            }</td>
+            <td>${
+              p.city ? esc(p.city) : '<span class="null-dash">—</span>'
+            }</td>
+            <td><span class="badge">${esc(p.agency)}</span></td>
+            <td><a class="link" href="${esc(
+              p.url,
+            )}" target="_blank" rel="noopener">Ver →</a></td>
+          </tr>`;
           })
           .join("");
 
         tableContainer.innerHTML = `
-      <table>
-        <thead><tr>${headCells}</tr></thead>
-        <tbody>${rows}</tbody>
-      </table>`;
+          <table>
+            <thead><tr>${headCells}</tr></thead>
+            <tbody>${rows}</tbody>
+          </table>`;
 
         renderPagination(totalPages);
       }
@@ -736,32 +873,23 @@
           paginationEl.innerHTML = "";
           return;
         }
-        let html = "";
-
-        html += `<button class="page-btn" ${
+        let html = `<button class="page-btn" ${
           currentPage === 1 ? "disabled" : ""
         } onclick="goPage(${currentPage - 1})">‹</button>`;
-
-        // Show smart page range
         const range = [];
         for (let i = 1; i <= totalPages; i++) {
-          if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 2) {
+          if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 2)
             range.push(i);
-          } else if (range[range.length - 1] !== "…") {
-            range.push("…");
-          }
+          else if (range[range.length - 1] !== "…") range.push("…");
         }
-
         range.forEach((p) => {
-          if (p === "…") {
+          if (p === "…")
             html += `<span style="padding:0 4px;color:var(--ink-muted)">…</span>`;
-          } else {
+          else
             html += `<button class="page-btn ${
               p === currentPage ? "active" : ""
             }" onclick="goPage(${p})">${p}</button>`;
-          }
         });
-
         html += `<button class="page-btn" ${
           currentPage === totalPages ? "disabled" : ""
         } onclick="goPage(${currentPage + 1})">›</button>`;
@@ -786,18 +914,36 @@
           .replace(/"/g, "&quot;");
       }
 
-      // ── EVENTS ─────────────────────────────────────────────────────────────
+      const DEFAULTS = {
+        city: "Tubarão",
+        minPrice: "",
+        maxPrice: "320000",
+        bedrooms: "1",
+        bathrooms: "1",
+        parking: "1",
+        minArea: "50",
+        maxArea: "",
+      };
+
+      function applyDefaults() {
+        document.getElementById("filter-city").value = DEFAULTS.city;
+        document.getElementById("filter-min-price").value = DEFAULTS.minPrice;
+        document.getElementById("filter-max-price").value = DEFAULTS.maxPrice;
+        document.getElementById("filter-bedrooms").value = DEFAULTS.bedrooms;
+        document.getElementById("filter-bathrooms").value = DEFAULTS.bathrooms;
+        document.getElementById("filter-parking").value = DEFAULTS.parking;
+        document.getElementById("filter-min-area").value = DEFAULTS.minArea;
+        document.getElementById("filter-max-area").value = DEFAULTS.maxArea;
+      }
+
       document
         .getElementById("btn-search")
         .addEventListener("click", fetchProperties);
+
       document.getElementById("btn-clear").addEventListener("click", () => {
-        document.getElementById("filter-city").value = "";
-        document.getElementById("filter-bedrooms").value = "";
-        document.getElementById("filter-min-price").value = "";
-        document.getElementById("filter-max-price").value = "";
+        applyDefaults();
       });
 
-      // Enter key on inputs
       document
         .querySelectorAll("#controls input, #controls select")
         .forEach((el) => {
@@ -806,7 +952,7 @@
           });
         });
 
-      // Auto-load on open
+      applyDefaults();
       fetchProperties();
     </script>
   </body>

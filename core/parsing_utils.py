@@ -20,43 +20,33 @@ def parse_price(raw: Optional[str]) -> Optional[float]:
 
     cleaned = normalize_whitespace(raw)
 
-    # Remove currency symbols and non-numeric chars except digits, dots and commas
     cleaned = re.sub(r"[^\d.,]", "", cleaned)
 
     if not cleaned:
         return None
 
-    # Determine format: if both separators exist, identify which is decimal
     has_dot = "." in cleaned
     has_comma = "," in cleaned
 
     if has_dot and has_comma:
-        # Last separator is the decimal one
         last_dot = cleaned.rfind(".")
         last_comma = cleaned.rfind(",")
 
         if last_comma > last_dot:
-            # Format: 1.200.000,00 → remove dots, replace comma with dot
             cleaned = cleaned.replace(".", "").replace(",", ".")
         else:
-            # Format: 1,200,000.00 → remove commas
             cleaned = cleaned.replace(",", "")
     elif has_comma:
-        # Could be thousands (1,200,000) or decimal (450,50)
         parts = cleaned.split(",")
         if len(parts) == 2 and len(parts[1]) <= 2:
-            # Likely decimal: "450,50" → "450.50"
             cleaned = cleaned.replace(",", ".")
         else:
-            # Likely thousands separator: "1,200,000" → "1200000"
             cleaned = cleaned.replace(",", "")
     elif has_dot:
         parts = cleaned.split(".")
         if len(parts) == 2 and len(parts[1]) <= 2:
-            # Likely decimal: "450.50" → keep as is
             pass
         else:
-            # Likely thousands separator: "1.200.000" → "1200000"
             cleaned = cleaned.replace(".", "")
 
     return safe_float(cleaned)
@@ -79,7 +69,6 @@ def parse_area(raw: Optional[str]) -> Optional[float]:
 
     cleaned = normalize_whitespace(raw)
 
-    # Extract numeric part (digits, dot, comma) before any unit
     match = re.search(r"[\d.,]+", cleaned)
     if not match:
         return None
