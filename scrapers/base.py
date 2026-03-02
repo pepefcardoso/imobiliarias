@@ -24,6 +24,7 @@ class AgencyScraper(ABC):
 
     @abstractmethod
     def scrape(self) -> list[Property]:
+        pass
 
     @property
     def url(self) -> str:

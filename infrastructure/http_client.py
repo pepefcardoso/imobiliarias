@@ -23,8 +23,12 @@ logger = logging.getLogger(__name__)
 
 
 class HttpClientError(Exception):
+    pass
+
 
 class HttpTimeoutError(HttpClientError):
+    pass
+
 
 class HttpStatusError(HttpClientError):
     def __init__(self, status_code: int, url: str) -> None:
@@ -34,6 +38,7 @@ class HttpStatusError(HttpClientError):
 
 
 class HttpConnectionError(HttpClientError):
+    pass
 
 class HttpClient:
     """
