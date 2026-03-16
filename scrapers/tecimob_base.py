@@ -13,21 +13,8 @@ each agency scraper only needs to declare:
     - _HEADERS      (with the correct x-domain value)
     - optionally override _build_params() for non-standard agencies
 
-Default quality filters (matching the project's target criteria) are applied
-at the API request level so unnecessary listings are never downloaded:
-
-    filter[transaction] = 1          (for sale only)
-    filter[bedroom_gte] = 1          (at least 1 bedroom)
-    filter[bathroom_gte] = 1         (at least 1 bathroom)
-    filter[garage_gte] = 1           (at least 1 parking spot)
-    filter[total_area_gte] = 50      (at least 50 m²)
-    filter[price_lte] = 320000       (up to R$ 320,000)
-
-These defaults mirror the project's stated objective:
-    "list all houses/apartments with 1+ rooms, 1+ bathrooms, 1+ garage,
-     at least 50/55 sqm, priced up to 320,000 reais"
-
-Per-agency subclasses may override these via class-level attributes if needed.
+Quality filters are applied dynamically based on the user's SearchQuery
+at the API request level so unnecessary listings are never downloaded.
 """
 
 import logging
@@ -35,7 +22,7 @@ from abc import abstractmethod
 from typing import Any, Optional
 
 from config.settings import AgencyConfig
-from core.models import Property
+from core.models import Property, SearchQuery
 from core.parsing_utils import parse_area, parse_price, safe_int
 from infrastructure.http_client import HttpClient
 from scrapers.base import AgencyScraper
@@ -43,11 +30,6 @@ from scrapers.base import AgencyScraper
 logger = logging.getLogger(__name__)
 
 PAGE_SIZE = 21
-DEFAULT_MIN_BEDROOMS: int = 1
-DEFAULT_MIN_BATHROOMS: int = 1
-DEFAULT_MIN_PARKING: int = 1
-DEFAULT_MIN_AREA: float = 50.0
-DEFAULT_MAX_PRICE: float = 320_000.0
 CITY_SLUG: str = "tubarao-sc"
 
 
@@ -68,7 +50,7 @@ class TecimobScraper(AgencyScraper):
         super().__init__(config=config, client=client)
         self.client._session.headers.update(self._HEADERS)
 
-    def scrape(self) -> list[Property]:
+    def scrape(self, query: SearchQuery) -> list[Property]:
         properties: list[Property] = []
         page = 1
         total_pages = 1
@@ -77,7 +59,7 @@ class TecimobScraper(AgencyScraper):
             offset = (page - 1) * PAGE_SIZE + 1
             logger.info("[%s] Fetching page %d/%d (offset=%d)", self.name, page, total_pages, offset)
 
-            data = self._fetch_page(offset)
+            data = self._fetch_page(offset, query)
             if not data:
                 break
 
@@ -102,8 +84,8 @@ class TecimobScraper(AgencyScraper):
         logger.info("[%s] Done. %d properties collected.", self.name, len(properties))
         return properties
 
-    def _fetch_page(self, offset: int) -> dict[str, Any] | None:
-        params = self._build_params(offset)
+    def _fetch_page(self, offset: int, query: SearchQuery) -> dict[str, Any] | None:
+        params = self._build_params(offset, query)
         try:
             resp = self.client._session.get(
                 self.API_ENDPOINT,
@@ -116,7 +98,7 @@ class TecimobScraper(AgencyScraper):
             logger.error("[%s] Failed to fetch offset=%d: %s", self.name, offset, exc)
             return None
 
-    def _build_params(self, offset: int) -> dict[str, Any]:
+    def _build_params(self, offset: int, query: SearchQuery) -> dict[str, Any]:
         params: dict[str, Any] = {
             "custom_query": "card",
             "sort": self.default_sort,
@@ -124,14 +106,25 @@ class TecimobScraper(AgencyScraper):
             "limit": PAGE_SIZE,
             "with_grouped_condos": "true",
             "filter[transaction]": 1,
-            "filter[bedroom_gte]": DEFAULT_MIN_BEDROOMS,
-            "filter[bathroom_gte]": DEFAULT_MIN_BATHROOMS,
-            "filter[garage_gte]": DEFAULT_MIN_PARKING,
-            "filter[total_area_gte]": DEFAULT_MIN_AREA,
-            "filter[price_lte]": DEFAULT_MAX_PRICE,
             "include": "subtype.type,user",
             "with_title": "true",
         }
+        
+        if query.min_bedrooms is not None:
+            params["filter[bedroom_gte]"] = query.min_bedrooms
+        if query.min_bathrooms is not None:
+            params["filter[bathroom_gte]"] = query.min_bathrooms
+        if query.min_parking is not None:
+            params["filter[garage_gte]"] = query.min_parking
+        if query.min_area is not None:
+            params["filter[total_area_gte]"] = query.min_area
+        if query.max_area is not None:
+            params["filter[total_area_lte]"] = query.max_area
+        if query.min_price is not None:
+            params["filter[price_gte]"] = query.min_price
+        if query.max_price is not None:
+            params["filter[price_lte]"] = query.max_price
+
         if self.use_city_slug_filter:
             params["filter[by_neighborhood_or_city_slug]"] = self.city_slug
         return params
