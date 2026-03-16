@@ -4,7 +4,7 @@ from concurrent.futures import Future, ThreadPoolExecutor, as_completed, Timeout
 from typing import Optional
 
 from config.settings import settings
-from core.models import Property
+from core.models import Property, SearchQuery
 from scrapers.base import AgencyScraper
 
 logger = logging.getLogger(__name__)
@@ -22,16 +22,23 @@ class Aggregator:
         self.concurrent = concurrent
         self.max_workers = max_workers or settings.max_workers
 
-    def collect(self) -> list[Property]:
+    def search(self, query: SearchQuery) -> list[Property]:
+        """
+        Executa a recolha em todos os scrapers passando a query do utilizador,
+        e aplica o filtro de segurança final (Safety Net) antes de devolver os resultados.
+        """
         if self.concurrent:
-            return self._collect_concurrent()
-        return self._collect_sequential()
+            properties = self._collect_concurrent(query)
+        else:
+            properties = self._collect_sequential(query)
+            
+        return self._apply_strict_filters(properties, query)
 
-    def _collect_sequential(self) -> list[Property]:
+    def _collect_sequential(self, query: SearchQuery) -> list[Property]:
         properties: list[Property] = []
 
         for scraper in self.scrapers:
-            batch = self._run_scraper(scraper)
+            batch = self._run_scraper(scraper, query)
             properties.extend(batch)
 
         logger.info(
@@ -41,13 +48,13 @@ class Aggregator:
         )
         return properties
 
-    def _collect_concurrent(self) -> list[Property]:
+    def _collect_concurrent(self, query: SearchQuery) -> list[Property]:
         properties: list[Property] = []
         future_to_scraper: dict[Future, AgencyScraper] = {}
 
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             for scraper in self.scrapers:
-                future = executor.submit(scraper.scrape)
+                future = executor.submit(scraper.scrape, query)
                 future_to_scraper[future] = scraper
 
             for future in as_completed(future_to_scraper):
@@ -85,10 +92,10 @@ class Aggregator:
         )
         return properties
 
-    def _run_scraper(self, scraper: AgencyScraper) -> list[Property]:
+    def _run_scraper(self, scraper: AgencyScraper, query: SearchQuery) -> list[Property]:
         start = time.perf_counter()
         try:
-            batch = scraper.scrape()
+            batch = scraper.scrape(query)
             duration = time.perf_counter() - start
             logger.info(
                 "[aggregator][%s] %d property(ies) collected in %.2fs.",
@@ -107,3 +114,43 @@ class Aggregator:
                 exc_info=True,
             )
             return []
+
+    def _apply_strict_filters(self, properties: list[Property], query: SearchQuery) -> list[Property]:
+        """
+        Safety Net: Valida programaticamente se os imóveis retornados pelos 
+        scrapers realmente cumprem as condições exigidas pelo utilizador.
+        """
+        filtered = []
+        for p in properties:
+            if query.min_bedrooms is not None and (p.bedrooms or 0) < query.min_bedrooms:
+                continue
+            
+            if query.min_bathrooms is not None and (p.bathrooms or 0) < query.min_bathrooms:
+                continue
+                
+            if query.min_parking is not None and (p.parking or 0) < query.min_parking:
+                continue
+                
+            if query.min_price is not None and (p.price or 0.0) < query.min_price:
+                continue
+            if query.max_price is not None and (p.price or float('inf')) > query.max_price:
+                continue
+                
+            if query.min_area is not None and (p.area or 0.0) < query.min_area:
+                continue
+            if query.max_area is not None and (p.area or float('inf')) > query.max_area:
+                continue
+                
+            if query.city:
+                if not p.city or query.city.lower() not in p.city.lower():
+                    continue
+                    
+            filtered.append(p)
+            
+        logger.info(
+            "[aggregator] Safety Net filtering applied: %d in -> %d out",
+            len(properties),
+            len(filtered)
+        )
+            
+        return filtered

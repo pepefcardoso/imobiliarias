@@ -1,10 +1,3 @@
-#### **[AGG-01]** Implementação do "Safety Net" no Aggregator (`services/aggregator.py`)
-
-- **Descrição Detalhada:** O `Aggregator` já usa o `ThreadPoolExecutor` corretamente, mas o método `collect()` não recebe a requisição do usuário. Precisamos alterar o método para `search(self, query: SearchQuery) -> list[Property]`. Além disso, ele deve implementar o método privado `_apply_strict_filters(properties, query)` para garantir a regra lógica de inclusão mínima (ex: garantir programaticamente que os imóveis retornados tenham $\ge$ quartos do que o pedido).
-- **Critério de Aceite:** O `Aggregator` deve repassar o objeto `query` para os scrapers no _Thread Pool_. Ao final, a lista unificada deve passar pelo filtro de segurança programático antes de ser retornada.
-- **Complexidade:** Média
-- **Prioridade:** Crítica
-
 #### **[SCRAP-01]** Atualização da Interface Base dos Scrapers (`scrapers/base.py`)
 
 - **Descrição Detalhada:** A classe abstrata `AgencyScraper` atualmente define `def scrape(self) -> list[Property]:`. Devemos atualizá-la para exigir a _query_ do usuário.
