@@ -2,7 +2,7 @@ import logging
 from typing import Any
 
 from config.settings import AgencyConfig
-from core.models import Property
+from core.models import Property, SearchQuery
 from core.parsing_utils import safe_float, safe_int
 from infrastructure.http_client import HttpClient
 from scrapers.base import AgencyScraper
@@ -17,12 +17,6 @@ _BASE_PARAMS: dict[str, Any] = {
     "direction": "asc",
     "availability": "buy",
     "search_type": "properties_map",
-    "city": "Tubarão",
-    "value_max": 320_000,
-    "bedroom_gte": 1,
-    "bathroom_gte": 1,
-    "garage_gte": 1,
-    "area_gte": 50,
     "with_listing_broker_count": "true",
     "with_photos": "true",
 }
@@ -45,7 +39,7 @@ class DubettuImoveisScraper(AgencyScraper):
         super().__init__(config=config, client=client)
         self.client._session.headers.update(self._HEADERS)
 
-    def scrape(self) -> list[Property]:
+    def scrape(self, query: SearchQuery) -> list[Property]:
         properties: list[Property] = []
         cursor: str | None = None
         page = 0
@@ -54,7 +48,7 @@ class DubettuImoveisScraper(AgencyScraper):
             page += 1
             logger.info("[%s] Fetching page %d (cursor=%s)", self.name, page, cursor or "—")
 
-            data = self._fetch_page(cursor)
+            data = self._fetch_page(cursor, query)
             if data is None:
                 break
 
@@ -78,10 +72,26 @@ class DubettuImoveisScraper(AgencyScraper):
         logger.info("[%s] Done. %d properties collected.", self.name, len(properties))
         return properties
 
-    def _fetch_page(self, cursor: str | None) -> dict[str, Any] | None:
+    def _fetch_page(self, cursor: str | None, query: SearchQuery) -> dict[str, Any] | None:
         params: dict[str, Any] = dict(_BASE_PARAMS)
         if cursor:
             params["cursor"] = cursor
+            
+        if query.city:
+            params["city"] = query.city
+        if query.max_price:
+            params["value_max"] = query.max_price
+        if query.min_price:
+            params["value_min"] = query.min_price
+        if query.min_bedrooms:
+            params["bedroom_gte"] = query.min_bedrooms
+        if query.min_bathrooms:
+            params["bathroom_gte"] = query.min_bathrooms
+        if query.min_parking:
+            params["garage_gte"] = query.min_parking
+        if query.min_area:
+            params["area_gte"] = query.min_area
+
         try:
             resp = self.client._session.get(
                 API_ENDPOINT,

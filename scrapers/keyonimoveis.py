@@ -3,7 +3,7 @@ import math
 from typing import Any
 
 from config.settings import AgencyConfig
-from core.models import Property
+from core.models import Property, SearchQuery
 from core.parsing_utils import parse_area, parse_price, safe_int
 from infrastructure.http_client import HttpClient
 from scrapers.base import AgencyScraper
@@ -39,7 +39,7 @@ class KeyOnImoveisScraper(AgencyScraper):
         super().__init__(config=config, client=client)
         self.client._session.headers.update(self._HEADERS)
 
-    def scrape(self) -> list[Property]:
+    def scrape(self, query: SearchQuery) -> list[Property]:
         properties: list[Property] = []
         page = 1
         total_pages = 1
@@ -47,7 +47,7 @@ class KeyOnImoveisScraper(AgencyScraper):
         while page <= min(total_pages, self.max_pages):
             logger.info("[%s] Fetching page %d/%d", self.name, page, total_pages)
 
-            data = self._fetch_page(page)
+            data = self._fetch_page(page, query)
             if data is None:
                 break
 
@@ -71,8 +71,8 @@ class KeyOnImoveisScraper(AgencyScraper):
         logger.info("[%s] Done. %d properties collected.", self.name, len(properties))
         return properties
 
-    def _fetch_page(self, page: int) -> dict[str, Any] | None:
-        payload = self._build_payload(page)
+    def _fetch_page(self, page: int, query: SearchQuery) -> dict[str, Any] | None:
+        payload = self._build_payload(page, query)
         try:
             resp = self.client._session.post(
                 API_ENDPOINT,
@@ -85,7 +85,7 @@ class KeyOnImoveisScraper(AgencyScraper):
             logger.error("[%s] Failed to fetch page %d: %s", self.name, page, exc)
             raise
 
-    def _build_payload(self, page: int) -> dict[str, Any]:
+    def _build_payload(self, page: int, query: SearchQuery) -> dict[str, Any]:
         return {
             "finalidade": "venda",
             "codigounidade": "",
@@ -104,16 +104,16 @@ class KeyOnImoveisScraper(AgencyScraper):
             "bairros[0][regiao]": "",
             "endereco": "",
             "edificio": "",
-            "numeroquartos": 1,
-            "numerovagas": 1,
-            "numerobanhos": 1,
+            "numeroquartos": query.min_bedrooms or 0,
+            "numerovagas": query.min_parking or 0,
+            "numerobanhos": query.min_bathrooms or 0,
             "numerosuite": 0,
             "numerovaranda": 0,
             "numeroelevador": 0,
-            "valorde": 0,
-            "valorate": 320_000,
-            "areade": 50,
-            "areaate": 0,
+            "valorde": query.min_price or 0,
+            "valorate": query.max_price or 0,
+            "areade": query.min_area or 0,
+            "areaate": query.max_area or 0,
             "areaexternade": 0,
             "areaexternaate": 0,
             "extras": "",
