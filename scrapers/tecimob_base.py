@@ -41,6 +41,7 @@ class TecimobScraper(AgencyScraper):
     city_slug: str = CITY_SLUG
     default_sort: str = "-created_at,id"
     use_city_slug_filter: bool = True
+    url_prefix: str = "imovel"
 
     def __init__(
         self,
@@ -148,7 +149,7 @@ class TecimobScraper(AgencyScraper):
             return Property(
                 agency=self.name,
                 title=(raw.get("title_formatted") or raw.get("meta_title") or "").strip(),
-                url=f"{self.BASE_URL}/comprar/{slug}",
+                url=f"{self.BASE_URL}/{self.url_prefix}/{slug}",
                 price=parse_price(raw.get("price") or raw.get("total_price")),
                 area=parse_area(area_block.get("value")),
                 bedrooms=safe_int((rooms.get("bedroom") or {}).get("value")),
