@@ -1,233 +1,120 @@
-# Design Documentation
-
 ## 1. Project Overview
 
-This system aggregates property listings from 30–40 real estate agency websites.
+This system is an **on-demand real estate search engine**. Instead of passively crawling, it translates user search criteria into real-time queries across 30–40 agency websites.
 
 Core responsibilities:
 
-1. Fetch listings from each agency
-2. Extract structured property data
-3. Normalize into standard model
-4. Aggregate all results
-5. Return as unified table (API response)
+1. Receive search parameters from the user (Price, Bedrooms, Bathrooms, City).
+2. Execute parallel searches across multiple agencies.
+3. Translate abstract filters into agency-specific URL parameters.
+4. Normalize and programmatically filter results to ensure consistency.
+5. Present a unified, paginated table of results.
 
 ---
 
 ## 2. System Context
 
-Actors:
+**Actors:**
 
-- User (via UI or API)
-- Real estate websites
+- **User:** Defines search criteria via the Frontend.
+- **Real Estate Websites:** External sources of truth for property listings.
 
-System:
+**System Components:**
 
-- Scraper engine
-- Aggregator
-- API
-
-External dependencies:
-
-- HTTP endpoints
-- Possibly JavaScript-rendered pages
+- **UI:** A simple search form and results table.
+- **API (FastAPI):** Receives search requests and triggers the Aggregator.
+- **Aggregator:** Manages the lifecycle of the search, concurrency, and final filtering.
+- **Scraper Engine:** Individual modules tailored to translate queries and extract data from specific sites.
 
 ---
 
-## 3. Data Flow
+## 3. Data Flow (On-Demand Search)
 
-For each agency:
+1. **User Input:** User selects filters (e.g., Bedrooms $\ge$ 2, Max Price: 500k).
+2. **Query Initialization:** The API creates a `SearchQuery` object.
+3. **Parallel Dispatch:** The Aggregator uses `ThreadPoolExecutor` to trigger all registered scrapers.
+4. **Scraper Translation:**
 
-1. Fetch URL
-2. Parse listing cards
-3. Extract raw values
-4. Normalize fields
-5. Return list of Property
+- Each scraper attempts to map the `SearchQuery` to the agency's native search URL.
+- If the agency's filter is "Exact Match" only, the scraper fetches the exact match or a broader list.
 
-Then:
-
-6. Aggregator merges all results
-7. API returns JSON
-8. UI renders table
+5. **Data Extraction:** Scrapers parse listing cards into normalized `Property` objects.
+6. **Programmatic Safety Filter:** The Aggregator performs a final check on all returned properties to ensure they strictly meet the $\ge$ requirements for rooms and price ranges.
+7. **Consolidation:** Results are merged into a single list and returned to the UI.
 
 ---
 
-## 4. Property Normalization Strategy
+## 4. Search & Normalization Strategy
 
-Challenges:
+### The "Safety Net" Filtering
 
-- Price formats differ
-- Area may include units
-- Missing fields
-- Different currency formats
+Since agencies handle filters inconsistently (e.g., some use "Exact" for bedrooms while the user wants "At least"), the system adopts a **double-filtering approach**:
 
-Normalization rules:
+- **Remote Filter:** Use the agency's website filters to minimize traffic and improve speed.
+- **Local Filter:** The code explicitly re-checks every property (e.g., `if property.bedrooms >= query.min_bedrooms`) to guarantee accuracy.
 
-- Prices stored as float
-- Area stored as float (m²)
-- Bedrooms/bathrooms as int
-- Missing values = None
-- URLs must be absolute
+### Normalization Rules
 
----
-
-## 5. Scraping Strategy
-
-Preferred order:
-
-1. Direct JSON API endpoint (best case)
-2. Static HTML via requests
-3. JavaScript-rendered page via browser automation
-
-Avoid always using browser automation.
-
-Performance matters with 40 agencies.
+- **Prices:** Stored as `float`.
+- **Area:** Stored as `float` (m²).
+- **Bedrooms/Bathrooms:** Stored as `int`.
+- **Missing values:** Represented as `None`.
+- **URLs:** Always converted to absolute URLs before returning.
 
 ---
 
-## 6. Pagination Handling
+## 5. Scraping & Concurrency
 
-Each scraper is responsible for:
+### Execution Model
 
-- Detecting pagination
-- Iterating through pages
-- Respecting max page limits
+- **Concurrency:** Powered by `ThreadPoolExecutor`.
+- **Resource Prioritization:**
 
-Global safety:
+1. Direct JSON APIs (Fastest).
+2. Static HTML via `requests`/`http_client` (Efficient).
+3. Browser Automation (Last resort for JS-heavy sites).
 
-- Add max_pages config
-- Add timeout per request
+### Reliability
 
----
-
-## 7. Concurrency Design (Optional Enhancement)
-
-If needed:
-
-- Use ThreadPoolExecutor
-- One thread per scraper
-- Collect results safely
-
-Do not introduce async unless necessary.
+- Each scraper must fail independently.
+- A 15-second timeout is enforced per scraper to prevent the UI from hanging.
 
 ---
 
-## 8. Error Isolation
+## 6. UI Design
 
-If one scraper fails:
+**Search Form:**
 
-- Log error
-- Continue others
-- Do not fail entire aggregation
+- Number of Bedrooms (Dropdown/Input: $\ge$ X).
+- Number of Bathrooms (Dropdown/Input: $\ge$ X).
+- Price Range (Min/Max inputs).
+- City (Text/Selection).
 
-Each scraper must fail independently.
+**Results Display:**
 
----
-
-## 9. Configuration Design
-
-config/settings.py:
-
-- Agency URLs
-- Timeouts
-- Max pages
-- Use browser flag
-- User agent string
-
-Keep configuration centralized.
+- Unified paginated table.
+- Columns: Agency, Title, Price, Area, Rooms, Neighborhood, Link.
+- Simple "Sort by Price" functionality.
 
 ---
 
-## 10. Logging Strategy
+## 7. Risk Assessment & Mitigation
 
-Structured logging:
-
-- scraper name
-- URL
-- error message
-- duration
-- number of properties collected
-
-Never use print statements.
+| Risk                          | Mitigation Strategy                                                                 |
+| ----------------------------- | ----------------------------------------------------------------------------------- |
+| **Site Filter Inconsistency** | Apply programmatic $\ge$ logic after results are collected.                         |
+| **IP Blocking (Anti-Bot)**    | Prioritize HTTP requests, use User-Agents, and avoid unnecessary browser rendering. |
+| **Slow Performance**          | Parallelize agency requests and limit pagination depth.                             |
+| **Structure Changes**         | Isolated scraper files allow for quick updates without touching the core.           |
 
 ---
 
-## 11. Testing Strategy
+## 8. Definition of Done
 
-Unit tests:
+The project is complete when:
 
-- Parsing utilities
-- Price normalization
-- Area normalization
-- HTML fixture parsing
-
-Integration tests:
-
-- Mock HTTP client
-- Validate Property output
-
-Do not test live websites in CI.
-
----
-
-## 12. UI Design
-
-Minimal interface:
-
-- Table view
-- Sorting by price
-- Filtering by city
-- Filter by bedrooms
-
-No complex UX required.
-
-Simple React or server-rendered HTML is enough.
-
----
-
-## 13. Extension Possibilities
-
-Future features:
-
-- Store properties in database
-- Detect price changes
-- Deduplicate by URL
-- Track listing history
-- Scheduled scraping
-- Export CSV
-
-If persistence is added:
-
-Introduce repository layer and ID strategy.
-
----
-
-## 14. Risk Assessment
-
-Main risks:
-
-- Website structure changes
-- Anti-bot blocking
-- Rate limiting
-- Inconsistent data formats
-
-Mitigation:
-
-- Per-scraper isolation
-- Logging and monitoring
-- Fail-soft aggregation
-- Timeouts
-
----
-
-## 15. Definition of Done
-
-Project is complete when:
-
-- 30–40 agencies implemented
-- Each returns normalized Property objects
-- Aggregator merges correctly
-- API returns unified JSON
-- UI displays table
-- Code remains simple and maintainable
-- No unnecessary abstraction layers
+- [ ] Users can trigger a real-time search from the UI.
+- [ ] At least 30 agencies are implemented as individual scrapers.
+- [ ] The Aggregator successfully merges results in parallel using `ThreadPoolExecutor`.
+- [ ] All results strictly follow the $\ge$ filter rules regardless of the source website's logic.
+- [ ] The API returns a clean, unified JSON structure.
