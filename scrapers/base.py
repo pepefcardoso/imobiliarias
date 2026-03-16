@@ -3,13 +3,17 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 from config.settings import AgencyConfig, settings
-from core.models import Property
+from core.models import Property, SearchQuery
 from infrastructure.http_client import HttpClient
 
 logger = logging.getLogger(__name__)
 
 
 class AgencyScraper(ABC):
+    """
+    Classe base abstrata para todos os scrapers de imobiliárias.
+    Define as propriedades e métodos obrigatórios que cada scraper deve implementar.
+    """
     name: str
 
     def __init__(
@@ -23,7 +27,13 @@ class AgencyScraper(ABC):
         )
 
     @abstractmethod
-    def scrape(self) -> list[Property]:
+    def scrape(self, query: SearchQuery) -> list[Property]:
+        """
+        Método principal que deve ser implementado por cada scraper.
+        
+        Recebe a 'query' (SearchQuery) com os filtros do usuário e 
+        deve retornar uma lista de objetos 'Property' normalizados.
+        """
         pass
 
     @property

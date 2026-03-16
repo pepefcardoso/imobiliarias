@@ -1,10 +1,3 @@
-#### **[SCRAP-01]** Atualização da Interface Base dos Scrapers (`scrapers/base.py`)
-
-- **Descrição Detalhada:** A classe abstrata `AgencyScraper` atualmente define `def scrape(self) -> list[Property]:`. Devemos atualizá-la para exigir a _query_ do usuário.
-- **Critério de Aceite:** O método na interface abstrata deve ser atualizado para `@abstractmethod def scrape(self, query: SearchQuery) -> list[Property]:`.
-- **Complexidade:** Baixa
-- **Prioridade:** Alta
-
 #### **[SCRAP-02]** Dinamização dos Filtros no `TecimobScraper` (`scrapers/tecimob_base.py`)
 
 - **Descrição Detalhada:** Esta é a classe mãe de dezenas de imobiliárias. Atualmente, o método `_build_params` usa constantes como `DEFAULT_MIN_BEDROOMS`. Devemos alterar o método para `scrape(self, query: SearchQuery)` e passar essa `query` para `_build_params`.
