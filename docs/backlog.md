@@ -1,17 +1,3 @@
-#### **[CORE-01]** Criação do Contrato de Busca (`SearchQuery`)
-
-- **Descrição Detalhada:** O sistema precisa de um objeto unificado para trafegar os parâmetros de busca do usuário desde a requisição na API até os Scrapers. Devemos criar o `dataclass` `SearchQuery` no arquivo `core/models.py`.
-- **Critério de Aceite:** O arquivo `core/models.py` deve exportar a classe `SearchQuery` contendo campos opcionais e tipados (ex: `min_price`, `max_price`, `min_bedrooms`, etc.).
-- **Complexidade:** Baixa
-- **Prioridade:** Crítica
-
-#### **[API-01]** Refatoração do Endpoint de Busca (`api/main.py`)
-
-- **Descrição Detalhada:** A API atualmente coleta todos os imóveis e filtra depois. O objetivo é transformar os _query parameters_ (parâmetros da URL) diretamente em um objeto `SearchQuery` e passá-lo para o `Aggregator`. A lógica de `if min_price is not None: properties = [...]` deve ser removida deste arquivo.
-- **Critério de Aceite:** O endpoint `GET /properties` deve instanciar um `SearchQuery` e chamar `_state.aggregator.search(query)`. O retorno será apenas a conversão dos objetos `Property` para `PropertyResponse`.
-- **Complexidade:** Baixa
-- **Prioridade:** Alta
-
 #### **[AGG-01]** Implementação do "Safety Net" no Aggregator (`services/aggregator.py`)
 
 - **Descrição Detalhada:** O `Aggregator` já usa o `ThreadPoolExecutor` corretamente, mas o método `collect()` não recebe a requisição do usuário. Precisamos alterar o método para `search(self, query: SearchQuery) -> list[Property]`. Além disso, ele deve implementar o método privado `_apply_strict_filters(properties, query)` para garantir a regra lógica de inclusão mínima (ex: garantir programaticamente que os imóveis retornados tenham $\ge$ quartos do que o pedido).
