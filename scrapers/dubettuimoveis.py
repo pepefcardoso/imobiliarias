@@ -83,14 +83,18 @@ class DubettuImoveisScraper(AgencyScraper):
             params["value_max"] = query.max_price
         if query.min_price:
             params["value_min"] = query.min_price
+        
         if query.min_bedrooms:
             params["bedroom_gte"] = query.min_bedrooms
         if query.min_bathrooms:
             params["bathroom_gte"] = query.min_bathrooms
         if query.min_parking:
             params["garage_gte"] = query.min_parking
+            
         if query.min_area:
-            params["area_gte"] = query.min_area
+            params["area_min"] = query.min_area
+        if query.max_area:
+            params["area_max"] = query.max_area
 
         try:
             resp = self.client._session.get(

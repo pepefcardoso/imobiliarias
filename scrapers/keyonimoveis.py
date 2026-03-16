@@ -20,6 +20,18 @@ CITY_STATE = "SC"
 CITY_URL = "tubarao"
 CITY_STATE_URL = "sc"
 
+def _format_price(value: float | None) -> str | int:
+    """Formata um float (ex: 150000.0) para o padrão esperado pela API (ex: 150.000,00)"""
+    if not value:
+        return 0
+    return f"{value:_.2f}".replace(".", ",").replace("_", ".")
+
+def _format_rooms(value: int | None, suffix: str) -> str | int:
+    """Formata a string de cômodos (ex: 2 -> '2-quartos'). Se for 0 ou None, retorna 0."""
+    if not value:
+        return 0
+    return f"{value}-{suffix}"
+
 
 class KeyOnImoveisScraper(AgencyScraper):
     name = "keyonimoveis"
@@ -104,14 +116,14 @@ class KeyOnImoveisScraper(AgencyScraper):
             "bairros[0][regiao]": "",
             "endereco": "",
             "edificio": "",
-            "numeroquartos": query.min_bedrooms or 0,
-            "numerovagas": query.min_parking or 0,
-            "numerobanhos": query.min_bathrooms or 0,
+            "numeroquartos": _format_rooms(query.min_bedrooms, "quartos"),
+            "numerovagas": _format_rooms(query.min_parking, "vagas"),
+            "numerobanhos": _format_rooms(query.min_bathrooms, "banheiros"),
             "numerosuite": 0,
             "numerovaranda": 0,
             "numeroelevador": 0,
-            "valorde": query.min_price or 0,
-            "valorate": query.max_price or 0,
+            "valorde": _format_price(query.min_price),
+            "valorate": _format_price(query.max_price),
             "areade": query.min_area or 0,
             "areaate": query.max_area or 0,
             "areaexternade": 0,
@@ -137,6 +149,7 @@ class KeyOnImoveisScraper(AgencyScraper):
             codigo = raw.get("codigo")
             url_amigavel = raw.get("url_amigavel", "")
             url_publica: str = raw.get("urlpublica") or ""
+            
             if not url_publica and url_amigavel and codigo:
                 url_publica = f"{BASE_URL}/imovel/{url_amigavel}/{codigo}"
 
