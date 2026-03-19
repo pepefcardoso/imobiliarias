@@ -29,6 +29,7 @@ from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from config.settings import settings
@@ -237,3 +238,11 @@ def get_properties(
 def health() -> dict:
     scraper_count = len(_state.aggregator.scrapers) if _state.aggregator else 0
     return {"status": "ok", "scrapers_registered": scraper_count}
+
+@app.get("/", include_in_schema=False)
+def serve_frontend():
+    """
+    Quando alguém aceder ao URL principal (https://imobiliarias.onrender.com/),
+    o servidor envia o ficheiro index.html.
+    """
+    return FileResponse("index.html")
