@@ -155,7 +155,7 @@ class TecimobScraper(AgencyScraper):
             return Property(
                 agency=self.name,
                 title=(raw.get("title_formatted") or raw.get("meta_title") or "").strip(),
-                url=f"{self.BASE_URL}/comprar/{slug}",
+                url=f"{self.BASE_URL}/imovel/{slug}",
                 price=parse_price(raw.get("price") or raw.get("total_price")),
                 area=parse_area(area_block.get("value")),
                 bedrooms=safe_int((rooms.get("bedroom") or {}).get("value")),
