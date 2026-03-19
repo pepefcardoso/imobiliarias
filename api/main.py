@@ -18,8 +18,8 @@ Running locally:
     uvicorn api.main:app --reload
 
 Endpoint:
-    GET http://localhost:8000/properties
-    GET http://localhost:8000/properties?city=Tubar%C3%A3o&max_price=320000&min_bedrooms=1&min_bathrooms=1&min_parking=1&min_area=50
+    GET https://imobiliarias.onrender.com/properties
+    GET https://imobiliarias.onrender.com/properties?city=Tubar%C3%A3o&max_price=320000&min_bedrooms=1&min_bathrooms=1&min_parking=1&min_area=50
 """
 
 import logging
