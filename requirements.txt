@@ -1,4 +1,14 @@
-fastapi
-uvicorn
-requests
-playwright
+# Framework principal para a API
+fastapi==0.110.0
+
+# Servidor ASGI de alta performance (com dependências padrão para produção)
+uvicorn[standard]==0.29.0
+
+# Servidor HTTP WSGI para gestão de processos em produção (necessário para o Render)
+gunicorn==21.2.0
+
+# Cliente HTTP para scrapers que usam requisições estáticas
+requests==2.31.0
+
+# Automação de browser para scrapers que requerem execução de JavaScript
+playwright==1.42.0
