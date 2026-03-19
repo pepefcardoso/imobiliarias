@@ -161,5 +161,11 @@ settings = Settings(
             use_browser=False,
             max_pages=20,
         ),
+        AgencyConfig(
+            name="olx",
+            url="https://www.olx.com.br/imoveis/venda/estado-sc/florianopolis-e-regiao/outras-cidades/tubarao",
+            use_browser=False,
+            max_pages=5,
+        ),
     ],
 )
