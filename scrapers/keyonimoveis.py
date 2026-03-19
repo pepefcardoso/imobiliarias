@@ -3,7 +3,7 @@ import math
 from typing import Any
 
 from config.settings import AgencyConfig
-from core.models import Property
+from core.models import Property, SearchQuery
 from core.parsing_utils import parse_area, parse_price, safe_int
 from infrastructure.http_client import HttpClient
 from scrapers.base import AgencyScraper
@@ -19,6 +19,18 @@ CITY_NAME = "Tubarão"
 CITY_STATE = "SC"
 CITY_URL = "tubarao"
 CITY_STATE_URL = "sc"
+
+def _format_price(value: float | None) -> str | int:
+    """Formata um float (ex: 150000.0) para o padrão esperado pela API (ex: 150.000,00)"""
+    if not value:
+        return 0
+    return f"{value:_.2f}".replace(".", ",").replace("_", ".")
+
+def _format_rooms(value: int | None, suffix: str) -> str | int:
+    """Formata a string de cômodos (ex: 2 -> '2-quartos'). Se for 0 ou None, retorna 0."""
+    if not value:
+        return 0
+    return f"{value}-{suffix}"
 
 
 class KeyOnImoveisScraper(AgencyScraper):
@@ -39,7 +51,7 @@ class KeyOnImoveisScraper(AgencyScraper):
         super().__init__(config=config, client=client)
         self.client._session.headers.update(self._HEADERS)
 
-    def scrape(self) -> list[Property]:
+    def scrape(self, query: SearchQuery) -> list[Property]:
         properties: list[Property] = []
         page = 1
         total_pages = 1
@@ -47,7 +59,7 @@ class KeyOnImoveisScraper(AgencyScraper):
         while page <= min(total_pages, self.max_pages):
             logger.info("[%s] Fetching page %d/%d", self.name, page, total_pages)
 
-            data = self._fetch_page(page)
+            data = self._fetch_page(page, query)
             if data is None:
                 break
 
@@ -71,8 +83,8 @@ class KeyOnImoveisScraper(AgencyScraper):
         logger.info("[%s] Done. %d properties collected.", self.name, len(properties))
         return properties
 
-    def _fetch_page(self, page: int) -> dict[str, Any] | None:
-        payload = self._build_payload(page)
+    def _fetch_page(self, page: int, query: SearchQuery) -> dict[str, Any] | None:
+        payload = self._build_payload(page, query)
         try:
             resp = self.client._session.post(
                 API_ENDPOINT,
@@ -85,7 +97,7 @@ class KeyOnImoveisScraper(AgencyScraper):
             logger.error("[%s] Failed to fetch page %d: %s", self.name, page, exc)
             raise
 
-    def _build_payload(self, page: int) -> dict[str, Any]:
+    def _build_payload(self, page: int, query: SearchQuery) -> dict[str, Any]:
         return {
             "finalidade": "venda",
             "codigounidade": "",
@@ -104,16 +116,16 @@ class KeyOnImoveisScraper(AgencyScraper):
             "bairros[0][regiao]": "",
             "endereco": "",
             "edificio": "",
-            "numeroquartos": 1,
-            "numerovagas": 1,
-            "numerobanhos": 1,
+            "numeroquartos": _format_rooms(query.min_bedrooms, "quartos"),
+            "numerovagas": _format_rooms(query.min_parking, "vagas"),
+            "numerobanhos": _format_rooms(query.min_bathrooms, "banheiros"),
             "numerosuite": 0,
             "numerovaranda": 0,
             "numeroelevador": 0,
-            "valorde": 0,
-            "valorate": 320_000,
-            "areade": 50,
-            "areaate": 0,
+            "valorde": _format_price(query.min_price),
+            "valorate": _format_price(query.max_price),
+            "areade": query.min_area or 0,
+            "areaate": query.max_area or 0,
             "areaexternade": 0,
             "areaexternaate": 0,
             "extras": "",
@@ -137,6 +149,7 @@ class KeyOnImoveisScraper(AgencyScraper):
             codigo = raw.get("codigo")
             url_amigavel = raw.get("url_amigavel", "")
             url_publica: str = raw.get("urlpublica") or ""
+            
             if not url_publica and url_amigavel and codigo:
                 url_publica = f"{BASE_URL}/imovel/{url_amigavel}/{codigo}"
 

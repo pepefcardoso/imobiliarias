@@ -28,3 +28,15 @@ class Property:
             "neighborhood": self.neighborhood,
             "city": self.city,
         }
+
+
+@dataclass
+class SearchQuery:
+    city: Optional[str] = field(default=None)
+    min_price: Optional[float] = field(default=None)
+    max_price: Optional[float] = field(default=None)
+    min_bedrooms: Optional[int] = field(default=None)
+    min_bathrooms: Optional[int] = field(default=None)
+    min_parking: Optional[int] = field(default=None)
+    min_area: Optional[float] = field(default=None)
+    max_area: Optional[float] = field(default=None)

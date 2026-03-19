@@ -1,78 +1,63 @@
-# Architecture Guidelines
-
 ## 1. Architectural Philosophy
 
-This project is a **data aggregation system**, not a complex domain-driven application.
+This project is an **On-Demand Search Engine** for real estate, not a simple crawler or a complex domain-driven application.
 
 Primary goal:
-> Scrape multiple real estate agencies, normalize listings into a standard model, aggregate results, and expose them via API.
+
+> Receive user search criteria, translate them into agency-specific requests, aggregate real-time results, and provide a unified, filtered response.
 
 Guiding principles:
 
-- Keep architecture minimal and explicit
-- Optimize for adding new agencies easily
-- Avoid unnecessary abstraction layers
-- Prefer composition over inheritance
-- Avoid speculative design
-- Isolate variability (scraping logic)
-- Keep the core model stable
+- **Search as a Router:** The system acts as a translator between a standard query and 30–40 different website "dialects."
+- **On-Demand Execution:** Scraping is triggered by user action, not by background schedules.
+- **Local Fallback Filtering:** Since external filters are inconsistent, the core system must perform a final programmatic validation of all results.
+- **AI-Ready Design:** Code patterns must be explicit and documented to allow AI agents to generate new scrapers with 100% compatibility.
 
 ---
 
 ## 2. High-Level Architecture
 
 System Flow:
+**User Input (UI)** → **SearchQuery Object** → **Aggregator (Parallel Execution)** → **Scrapers (Query Translation)** → **Post-Processing (Local Filtering)** → **Unified Table (API)**
 
-Source Website  
-→ Scraper  
-→ Normalization  
-→ Aggregator  
-→ API  
-→ UI
+We avoid:
 
-There is no need for:
-- Repositories (unless persistence is introduced)
-- Use case layers
-- Complex factories
-- Pipeline abstractions
-- Domain services
+- Persistent Databases (for now).
+- Complex Caching (until performance demands it).
+- Heavyweight Pipeline Abstractions.
 
 ---
 
 ## 3. Folder Structure
 
-Recommended structure:
-
-```
-
+```text
 project/
 │
 ├── core/
-│   ├── models.py
-│   ├── parsing_utils.py
+│   ├── models.py          # Property and SearchQuery models
+│   └── parsing_utils.py   # Shared logic for data cleaning
 │
 ├── scrapers/
-│   ├── base.py
-│   ├── agency_a.py
-│   ├── agency_b.py
+│   ├── base.py            # Abstract Base Class for all scrapers
+│   ├── agency_a.py        # Specific implementation
 │   └── ...
 │
 ├── services/
-│   └── aggregator.py
+│   └── aggregator.py      # Orchestrates the search and final filtering
 │
 ├── infrastructure/
-│   ├── http_client.py
-│   └── browser_client.py
+│   ├── http_client.py     # Fast, static requests
+│   └── browser_client.py  # Slow, JS-rendered requests
 │
 ├── api/
-│   └── main.py
+│   └── main.py            # FastAPI endpoints
 │
 ├── config/
-│   └── settings.py
+│   └── settings.py        # Agency URLs and timeouts
 │
 └── tests/
 
-````
+```
 
 ---
 
@@ -80,13 +65,19 @@ project/
 
 ### models.py
 
-The core model must remain stable and simple.
-
-Example:
+The core models define the contract for the entire system.
 
 ```python
 from dataclasses import dataclass
 from typing import Optional
+
+@dataclass
+class SearchQuery:
+    min_price: Optional[float]
+    max_price: Optional[float]
+    min_bedrooms: int    # Rule: Result must be >= this value
+    min_bathrooms: int   # Rule: Result must be >= this value
+    city: Optional[str]
 
 @dataclass
 class Property:
@@ -100,213 +91,90 @@ class Property:
     neighborhood: Optional[str]
     city: Optional[str]
     url: str
-````
 
-Rules:
-
-* No scraping logic inside models
-* No formatting logic inside models
-* Keep it pure and serializable
+```
 
 ---
 
-### parsing_utils.py
-
-Shared helper functions:
-
-* parse_price
-* parse_area
-* safe_int
-* safe_float
-* normalize_whitespace
-* build_absolute_url
-
-Never duplicate parsing logic inside scrapers.
-
----
-
-## 5. Scrapers Layer (Isolated Variability)
+## 5. Scrapers Layer (The Translators)
 
 ### Base Scraper
 
+Every scraper must receive the `SearchQuery` and return a list of `Property`.
+
 ```python
 from abc import ABC, abstractmethod
-from core.models import Property
+from core.models import Property, SearchQuery
 
 class AgencyScraper(ABC):
     name: str
 
     @abstractmethod
-    def scrape(self) -> list[Property]:
+    def scrape(self, query: SearchQuery) -> list[Property]:
+        """
+        1. Translate query to site-specific URL/Parameters.
+        2. Fetch and parse results.
+        3. Return normalized Property list.
+        """
         pass
+
 ```
 
-Rules:
+### The "Inconsistency" Strategy
 
-* Each scraper file = one agency
-* No cross-dependency between scrapers
-* Scrapers must return normalized Property objects
-* Scrapers must not know about other scrapers
+When a site handles filters differently, the scraper must follow this hierarchy:
 
----
-
-### Adding a New Agency
-
-Steps:
-
-1. Create a new file in `scrapers/`
-2. Implement `AgencyScraper`
-3. Use parsing utilities
-4. Register scraper in aggregator
-
-That’s it.
-
-No factories required.
+1. **Native Filter:** Use the site's search engine to reduce data volume (e.g., if user wants 3 bedrooms, tell the site to show 3).
+2. **Broad Search:** If the site cannot filter by "greater than," the scraper brings the closest matches.
+3. **Local Fallback:** The Scraper/Aggregator will perform the final check (e.g., $Bedrooms \ge 3$) before returning the data.
 
 ---
 
-## 6. Infrastructure Layer
-
-Two clients:
-
-### http_client.py
-
-Used for static HTML or JSON endpoints.
-
-### browser_client.py
-
-Used only when JavaScript rendering is required.
-
-Rules:
-
-* Prefer HTTP client
-* Use browser automation only when necessary
-* Never mix scraping logic inside infrastructure
-
----
-
-## 7. Services Layer
+## 6. Services Layer
 
 ### aggregator.py
 
-Responsible for:
-
-* Running all scrapers
-* Collecting results
-* Handling errors
-* Returning aggregated list
-
-Example:
+The Aggregator manages the lifecycle of a search request.
 
 ```python
+from concurrent.futures import ThreadPoolExecutor
+
 class Aggregator:
     def __init__(self, scrapers):
         self.scrapers = scrapers
 
-    def collect(self):
-        properties = []
-        for scraper in self.scrapers:
-            try:
-                properties.extend(scraper.scrape())
-            except Exception as e:
-                # log error
-                continue
-        return properties
+    def search(self, query: SearchQuery):
+        all_properties = []
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            # Run all scrapers in parallel for speed
+            results = executor.map(lambda s: s.scrape(query), self.scrapers)
+            for property_list in results:
+                all_properties.extend(property_list)
+
+        # FINAL FILTERING (Safety Net)
+        return self._apply_strict_filters(all_properties, query)
+
+    def _apply_strict_filters(self, properties, query):
+        return [
+            p for p in properties
+            if (p.bedrooms or 0) >= query.min_bedrooms
+            and (p.bathrooms or 0) >= query.min_bathrooms
+            # ... and price/city checks
+        ]
+
 ```
 
-Rules:
+---
 
-* Aggregator must not parse HTML
-* Aggregator must not know scraper internals
+## 7. Scalability & Error Handling
+
+- **Concurrency:** Use `ThreadPoolExecutor`. Even if agencies are scraped "one by one" logically, running them in parallel is mandatory to keep UI response times acceptable.
+- **Isolation:** A failure in `agency_a.py` must never prevent `agency_b.py` from returning results.
+- **Timeout:** Every scraper must have a hard timeout (e.g., 15 seconds).
 
 ---
 
-## 8. API Layer
+## 8. Anti-Overengineering Rules
 
-Use FastAPI.
-
-Expose:
-
-GET /properties
-
-Return:
-
-* JSON list of Property
-* Optional filters (city, price range, bedrooms)
-
-Keep it simple.
-
----
-
-## 9. Error Handling Strategy
-
-Each scraper:
-
-* Should raise meaningful exceptions
-* Should not silently swallow errors
-
-Aggregator:
-
-* Logs failures
-* Continues execution
-
-Never use broad `except Exception` without logging context.
-
----
-
-## 10. Anti-Overengineering Rules
-
-Do NOT introduce:
-
-* Repository pattern (unless DB exists)
-* UseCase layer
-* Command pattern
-* Pipeline abstractions
-* Step processors
-* Abstract factories
-
-Only introduce complexity when there is a real need.
-
----
-
-## 11. Scalability Considerations
-
-With 30–40 agencies:
-
-* Ensure each scraper is isolated
-* Add timeout per scraper
-* Consider concurrency using ThreadPoolExecutor
-* Add per-scraper configuration
-
-Do not prematurely optimize.
-
----
-
-## 12. Code Quality Standards
-
-* Type hints everywhere
-* Black formatting
-* Ruff or Flake8 linting
-* Unit tests for parsing logic
-* No duplicated helper logic
-* No business logic inside API layer
-
----
-
-## 13. Long-Term Evolution
-
-If project evolves into:
-
-* Persistent storage
-* Historical tracking
-* Change detection
-* Price monitoring
-
-Then introduce:
-
-* Database layer
-* Property identity strategy
-* Diff engine
-* Repository abstraction
-
-Not before.
+- **No DB:** Do not add SQLAlchemy or Mongo unless we start tracking price history.
+- **No Complex UI:** A paginated table is the goal. No complex state management or "saved searches" yet.

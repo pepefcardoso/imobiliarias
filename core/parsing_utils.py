@@ -3,22 +3,26 @@ from typing import Optional
 from urllib.parse import urljoin, urlparse
 
 
-def parse_price(raw: Optional[str]) -> Optional[float]:
+def parse_price(raw: Optional[str | int | float]) -> Optional[float]:
     """
-    Extracts a float price from a raw string.
+    Extrai um valor de preço (float) a partir de uma string ou número bruto.
 
-    Handles formats like:
+    Lida com formatos como:
         "R$ 450.000,00"  → 450000.0
         "450,000.00"     → 450000.0
         "1.200.000"      → 1200000.0
         "350000"         → 350000.0
+        450000           → 450000.0 (Novo: Suporte direto a números)
 
-    Returns None if the value cannot be parsed.
+    Retorna None se o valor não puder ser processado.
     """
-    if not raw:
+    if raw is None or raw == "":
         return None
 
-    cleaned = normalize_whitespace(raw)
+    if isinstance(raw, (int, float)):
+        return float(raw)
+
+    cleaned = normalize_whitespace(str(raw))
 
     cleaned = re.sub(r"[^\d.,]", "", cleaned)
 
@@ -52,22 +56,26 @@ def parse_price(raw: Optional[str]) -> Optional[float]:
     return safe_float(cleaned)
 
 
-def parse_area(raw: Optional[str]) -> Optional[float]:
+def parse_area(raw: Optional[str | int | float]) -> Optional[float]:
     """
-    Extracts a float area value (m²) from a raw string.
+    Extrai um valor de área (float, m²) a partir de uma string ou número bruto.
 
-    Handles formats like:
+    Lida com formatos como:
         "95 m²"     → 95.0
         "95,5m2"    → 95.5
         "1.200 m²"  → 1200.0
         "95.50"     → 95.5
+        95          → 95.0 (Novo: Suporte direto a números)
 
-    Returns None if the value cannot be parsed.
+    Retorna None se o valor não puder ser processado.
     """
-    if not raw:
+    if raw is None or raw == "":
         return None
 
-    cleaned = normalize_whitespace(raw)
+    if isinstance(raw, (int, float)):
+        return float(raw)
+
+    cleaned = normalize_whitespace(str(raw))
 
     match = re.search(r"[\d.,]+", cleaned)
     if not match:
@@ -102,9 +110,9 @@ def parse_area(raw: Optional[str]) -> Optional[float]:
 
 def safe_int(raw: Optional[str | int | float]) -> Optional[int]:
     """
-    Safely converts a value to int.
+    Converte com segurança um valor para int.
 
-    Returns None if conversion fails.
+    Retorna None se a conversão falhar.
     """
     if raw is None:
         return None
@@ -128,9 +136,9 @@ def safe_int(raw: Optional[str | int | float]) -> Optional[int]:
 
 def safe_float(raw: Optional[str | int | float]) -> Optional[float]:
     """
-    Safely converts a value to float.
+    Converte com segurança um valor para float.
 
-    Returns None if conversion fails.
+    Retorna None se a conversão falhar.
     """
     if raw is None:
         return None
@@ -146,9 +154,9 @@ def safe_float(raw: Optional[str | int | float]) -> Optional[float]:
 
 def normalize_whitespace(raw: Optional[str]) -> str:
     """
-    Strips leading/trailing whitespace and collapses internal whitespace.
+    Remove espaços em branco no início/fim e colapsa espaços internos.
 
-    Returns empty string if input is None.
+    Retorna uma string vazia se o input for None.
     """
     if not raw:
         return ""
@@ -158,16 +166,16 @@ def normalize_whitespace(raw: Optional[str]) -> str:
 
 def build_absolute_url(base_url: str, path: str) -> str:
     """
-    Converts a relative path into an absolute URL given a base URL.
+    Converte um caminho relativo num URL absoluto dado um URL base.
 
-    Examples:
+    Exemplos:
         base="https://agency.com/listings", path="/property/123"
         → "https://agency.com/property/123"
 
         base="https://agency.com", path="https://agency.com/property/123"
-        → "https://agency.com/property/123"  (already absolute, returned as-is)
+        → "https://agency.com/property/123"  (já é absoluto, retornado como está)
 
-    Raises ValueError if the result is not a valid absolute URL.
+    Levanta ValueError se o resultado não for um URL absoluto válido.
     """
     if not path:
         raise ValueError("path must not be empty")

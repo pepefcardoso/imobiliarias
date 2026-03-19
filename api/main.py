@@ -32,6 +32,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from config.settings import settings
+from core.models import SearchQuery
 from scrapers.base import AgencyScraper
 from services.aggregator import Aggregator
 
@@ -208,62 +209,22 @@ def get_properties(
     if _state.aggregator is None:
         raise HTTPException(status_code=503, detail="Aggregator not initialised.")
 
-    properties = _state.aggregator.collect()
+    query = SearchQuery(
+        city=city,
+        min_price=min_price,
+        max_price=max_price,
+        min_bedrooms=min_bedrooms,
+        min_bathrooms=min_bathrooms,
+        min_parking=min_parking,
+        min_area=min_area,
+        max_area=max_area
+    )
 
-    if city is not None:
-        city_lower = city.lower()
-        properties = [
-            p for p in properties
-            if p.city is not None and city_lower in p.city.lower()
-        ]
-
-    if min_price is not None:
-        properties = [
-            p for p in properties
-            if p.price is not None and p.price >= min_price
-        ]
-
-    if max_price is not None:
-        properties = [
-            p for p in properties
-            if p.price is not None and p.price <= max_price
-        ]
-
-    if min_bedrooms is not None:
-        properties = [
-            p for p in properties
-            if p.bedrooms is not None and p.bedrooms >= min_bedrooms
-        ]
-
-    if min_bathrooms is not None:
-        properties = [
-            p for p in properties
-            if p.bathrooms is not None and p.bathrooms >= min_bathrooms
-        ]
-
-    if min_parking is not None:
-        properties = [
-            p for p in properties
-            if p.parking is not None and p.parking >= min_parking
-        ]
-
-    if min_area is not None:
-        properties = [
-            p for p in properties
-            if p.area is not None and p.area >= min_area
-        ]
-
-    if max_area is not None:
-        properties = [
-            p for p in properties
-            if p.area is not None and p.area <= max_area
-        ]
+    properties = _state.aggregator.search(query)
 
     logger.info(
-        "[GET /properties] city=%r min_price=%s max_price=%s "
-        "min_bedrooms=%s min_bathrooms=%s min_parking=%s min_area=%s → %d result(s)",
-        city, min_price, max_price,
-        min_bedrooms, min_bathrooms, min_parking, min_area,
+        "[GET /properties] query=%s → %d result(s)",
+        query,
         len(properties),
     )
 
