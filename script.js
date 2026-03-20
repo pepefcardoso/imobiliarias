@@ -271,18 +271,29 @@ function renderFilterSummary({
 
 function sortData(data) {
   const d = [...data];
+
+  const numericKeys = ["price", "area", "bedrooms", "bathrooms", "parking"];
+
   d.sort((a, b) => {
-    let av = a[sortKey],
-      bv = b[sortKey];
+    let av = a[sortKey];
+    let bv = b[sortKey];
+
     if (av == null && bv == null) return 0;
     if (av == null) return 1;
     if (bv == null) return -1;
+
+    if (numericKeys.includes(sortKey)) {
+      return sortDir === "asc" ? av - bv : bv - av;
+    }
+
     if (typeof av === "string") av = av.toLowerCase();
     if (typeof bv === "string") bv = bv.toLowerCase();
+
     if (av < bv) return sortDir === "asc" ? -1 : 1;
     if (av > bv) return sortDir === "asc" ? 1 : -1;
     return 0;
   });
+
   return d;
 }
 
@@ -435,12 +446,23 @@ function renderPagination(totalPages) {
 }
 
 function goPage(n) {
+  const totalPages = Math.ceil(allData.length / PAGE_SIZE) || 1;
+
+  if (n < 1) n = 1;
+  if (n > totalPages) n = totalPages;
+
+  if (currentPage === n) return;
+
   currentPage = n;
   renderTable();
-  window.scrollTo({
-    top: document.querySelector(".table-wrap").offsetTop - 60,
-    behavior: "smooth",
-  });
+
+  const tableWrap = document.querySelector(".table-wrap");
+  if (tableWrap) {
+    window.scrollTo({
+      top: tableWrap.offsetTop - 60,
+      behavior: "smooth",
+    });
+  }
 }
 
 function esc(s) {
