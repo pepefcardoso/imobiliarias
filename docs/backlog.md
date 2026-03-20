@@ -60,11 +60,11 @@
 
 **Objetivo:** Dar melhor feedback visual ao utilizador.
 
-- [ ] **Frontend - Estado de Carregamento (Skeleton):**
+- [X] **Frontend - Estado de Carregamento (Skeleton):**
   - Criar "Skeleton Loader" animado enquanto aguarda a API.
-- [ ] **Frontend - Estados Vazios e Erros:**
+- [X] **Frontend - Estados Vazios e Erros:**
   - Melhorar visualmente a mensagem de tabela vazia.
-- [ ] **Frontend - Botão Limpar Filtros:**
+- [X] **Frontend - Botão Limpar Filtros:**
   - Atualizar `applyDefaults()` para suportar os novos dropdowns.
 
 ## 6. Verificações de Ordenação e Paginação
