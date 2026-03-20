@@ -15,6 +15,8 @@ class Property:
     neighborhood: Optional[str] = field(default=None)
     city: Optional[str] = field(default=None)
     image_url: Optional[str] = field(default=None)
+    latitude: Optional[float] = field(default=None)
+    longitude: Optional[float] = field(default=None)
 
     def to_dict(self) -> dict:
         return {
@@ -29,6 +31,8 @@ class Property:
             "neighborhood": self.neighborhood,
             "city": self.city,
             "image_url": self.image_url,
+            "latitude": self.latitude,
+            "longitude": self.longitude,
         }
 
 @dataclass

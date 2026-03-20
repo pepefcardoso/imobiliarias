@@ -158,6 +158,8 @@ class PropertyResponse(BaseModel):
     neighborhood: Optional[str] = None
     city: Optional[str] = None
     image_url: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 @app.get(
     "/properties",

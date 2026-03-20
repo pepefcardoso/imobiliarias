@@ -106,6 +106,28 @@ const DICIONARIO_BAIRROS = {
   ],
 };
 
+const CITY_CENTERS = {
+  Tubarão: { lat: -28.48, lng: -49.0066 },
+  "Capivari de Baixo": { lat: -28.4447, lng: -48.9536 },
+  Laguna: { lat: -28.4816, lng: -48.7811 },
+  Jaguaruna: { lat: -28.6141, lng: -49.0253 },
+};
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 function atualizarBairros() {
   const city = document.getElementById("filter-city").value;
   const neighSelect = document.getElementById("filter-neighborhood");
@@ -171,7 +193,28 @@ async function fetchProperties() {
     const url = `${API_BASE}/properties?${params.toString()}`;
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
-    allData = await resp.json();
+
+    const rawData = await resp.json();
+
+    allData = rawData.map((p) => {
+      let price_sqm = null;
+      if (p.price && p.area && p.area > 0) {
+        price_sqm = p.price / p.area;
+      }
+
+      let distance = null;
+      if (p.city && CITY_CENTERS[p.city] && p.latitude && p.longitude) {
+        distance = calculateDistance(
+          CITY_CENTERS[p.city].lat,
+          CITY_CENTERS[p.city].lng,
+          p.latitude,
+          p.longitude,
+        );
+      }
+
+      return { ...p, price_sqm, distance };
+    });
+
     currentPage = 1;
     renderTable();
     setStatus(
@@ -332,15 +375,29 @@ const COLUMNS = [
   { key: "image_url", label: "Imagem", sortable: false },
   { key: "title", label: "Imóvel", sortable: false },
   { key: "price", label: "Preço", sortable: true },
+  { key: "price_sqm", label: "R$/m²", sortable: true },
   { key: "area", label: "Área", sortable: true },
   { key: "bedrooms", label: "Quartos", sortable: true },
   { key: "bathrooms", label: "Banheiros", sortable: true },
   { key: "parking", label: "Vagas", sortable: true },
+  { key: "distance", label: "Dist. Centro", sortable: true },
   { key: "neighborhood", label: "Bairro", sortable: true },
   { key: "city", label: "Cidade", sortable: true },
   { key: "agency", label: "Imobiliária", sortable: true },
   { key: "_link", label: "Ver", sortable: false },
 ];
+
+function fmtPriceSqm(v) {
+  if (v == null) return '<span class="null-dash">—</span>';
+  return `R$ ${Number(v).toLocaleString("pt-BR", {
+    maximumFractionDigits: 0,
+  })}/m²`;
+}
+
+function fmtDistance(v) {
+  if (v == null) return '<span class="null-dash">—</span>';
+  return `${Number(v).toFixed(1)} km`;
+}
 
 function fmtImage(url) {
   if (!url) {
@@ -385,26 +442,27 @@ function renderTable() {
     .map((p, i) => {
       const delay = i * 15 + "ms";
       return `<tr style="animation-delay:${delay}">
-      <td>${fmtImage(p.image_url)}</td> <td class="title-cell">
-        <div class="listing-title">${esc(p.title || "–")}</div>
-        <div class="listing-agency">${esc(p.agency)}</div>
-      </td>
-      <td>${fmtPrice(p.price)}</td>
-      <td>${fmtArea(p.area)}</td>
-      <td>${fmtInt(p.bedrooms)}</td>
-      <td>${fmtInt(p.bathrooms)}</td>
-      <td>${fmtInt(p.parking)}</td>
-      <td>${
+    <td>${fmtImage(p.image_url)}</td> 
+    <td class="title-cell">
+      <div class="listing-title">${esc(p.title || "–")}</div>
+      <div class="listing-agency">${esc(p.agency)}</div>
+    </td>
+    <td>${fmtPrice(p.price)}</td>
+    <td>${fmtPriceSqm(p.price_sqm)}</td> <td>${fmtArea(p.area)}</td>
+    <td>${fmtInt(p.bedrooms)}</td>
+    <td>${fmtInt(p.bathrooms)}</td>
+    <td>${fmtInt(p.parking)}</td>
+    <td>${fmtDistance(p.distance)}</td> <td>${
         p.neighborhood
           ? `<span class="tag">${esc(p.neighborhood)}</span>`
           : '<span class="null-dash">—</span>'
       }</td>
-      <td>${p.city ? esc(p.city) : '<span class="null-dash">—</span>'}</td>
-      <td><span class="badge">${esc(p.agency)}</span></td>
-      <td><a class="link" href="${esc(
-        p.url,
-      )}" target="_blank" rel="noopener">Ver →</a></td>
-    </tr>`;
+    <td>${p.city ? esc(p.city) : '<span class="null-dash">—</span>'}</td>
+    <td><span class="badge">${esc(p.agency)}</span></td>
+    <td><a class="link" href="${esc(
+      p.url,
+    )}" target="_blank" rel="noopener">Ver →</a></td>
+  </tr>`;
     })
     .join("");
 
