@@ -65,6 +65,7 @@ from scrapers.pauloemayer import PauloEMayerScraper
 from scrapers.rfnegocios import RFNegociosScraper
 from scrapers.sittuarimoveis import SittuarImoveisScraper
 from scrapers.vendimoveis import VendimoveisScraper
+from scrapers.chavesnamao import ChavesNaMaoScraper
 
 SCRAPER_REGISTRY: dict[str, type[AgencyScraper]] = {
     "keyonimoveis": KeyOnImoveisScraper,
@@ -88,6 +89,7 @@ SCRAPER_REGISTRY: dict[str, type[AgencyScraper]] = {
     "rfnegocios": RFNegociosScraper,
     "dubettuimoveis": DubettuImoveisScraper,
     "pauloemayer": PauloEMayerScraper,
+    "chavesnamao": ChavesNaMaoScraper,
 }
 
 class _AppState:

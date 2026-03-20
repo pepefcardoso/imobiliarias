@@ -161,5 +161,11 @@ settings = Settings(
             use_browser=False,
             max_pages=20,
         ),
+        AgencyConfig(
+            name="chavesnamao",
+            url="https://www.chavesnamao.com.br",
+            use_browser=False,
+            max_pages=10,
+        ),
     ],
 )

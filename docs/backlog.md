@@ -15,14 +15,14 @@
 
 **Objetivo:** Implementar a extração de dados do portal ChavesNaMao para expandir a base de imóveis do agregador.
 
-- [ ] **Criar o ficheiro do Scraper:** Criar `scrapers/chavesnamao.py` herdando da classe base `AgencyScraper`.
-- [ ] **Lógica de Tradução de URL:** Implementar a função `_build_url_and_params` para traduzir o `SearchQuery` na estrutura específica deles:
+- [X] **Criar o ficheiro do Scraper:** Criar `scrapers/chavesnamao.py` herdando da classe base `AgencyScraper`.
+- [X] **Lógica de Tradução de URL:** Implementar a função `_build_url_and_params` para traduzir o `SearchQuery` na estrutura específica deles:
   - Mapear cidades para o formato da rota (ex: `sc-tubarao`).
   - Mapear quartos para a rota (ex: `1-quarto`).
   - Mapear os restantes parâmetros para a querystring `?filtro=` (ex: `pmin:100000,pmax:350000,amin:50,amax:300,ban:1,gar:1`).
-- [ ] **Extração de Dados:** Analisar a resposta HTML do ChavesNaMao. Como muitos portais modernos, é provável que os dados dos imóveis estejam embutidos num bloco JSON (como o `__NEXT_DATA__` ou similar) no código fonte. Extrair e normalizar para o objeto `Property`.
-- [ ] **Registo na API:** Adicionar o `ChavesNaMaoScraper` ao `SCRAPER_REGISTRY` em `api/main.py`.
-- [ ] **Configuração:** Adicionar o novo `AgencyConfig` com o URL base do ChavesNaMao em `config/settings.py`.
+- [X] **Extração de Dados:** Analisar a resposta HTML do ChavesNaMao. Como muitos portais modernos, é provável que os dados dos imóveis estejam embutidos num bloco JSON (como o `__NEXT_DATA__` ou similar) no código fonte. Extrair e normalizar para o objeto `Property`.
+- [X] **Registo na API:** Adicionar o `ChavesNaMaoScraper` ao `SCRAPER_REGISTRY` em `api/main.py`.
+- [X] **Configuração:** Adicionar o novo `AgencyConfig` com o URL base do ChavesNaMao em `config/settings.py`.
 
 ## 3. Filtros de Localização (Cidades e Bairros)
 
