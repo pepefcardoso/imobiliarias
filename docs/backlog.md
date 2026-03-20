@@ -4,11 +4,11 @@
 
 **Objetivo:** Remover alvos de scraping com alto risco comercial (OLX).
 
-- [ ] **Eliminar ficheiro do scraper:** Apagar completamente o ficheiro `scrapers/olx.py`.
-- [ ] **Limpar API e Registry:** No ficheiro `api/main.py`:
+- [X] **Eliminar ficheiro do scraper:** Apagar completamente o ficheiro `scrapers/olx.py`.
+- [X] **Limpar API e Registry:** No ficheiro `api/main.py`:
   - Remover a importação `from scrapers.olx import OlxScraper`.
   - Remover a chave `"olx": OlxScraper` do dicionário `SCRAPER_REGISTRY`.
-- [ ] **Limpar Configurações:** No ficheiro `config/settings.py`:
+- [X] **Limpar Configurações:** No ficheiro `config/settings.py`:
   - Remover o bloco `AgencyConfig` referente à `olx` na lista `settings.agencies`.
 
 ## 2. Novo Scraper: ChavesNaMao (Prioridade Alta)
