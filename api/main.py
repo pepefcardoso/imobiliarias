@@ -157,6 +157,7 @@ class PropertyResponse(BaseModel):
     parking: Optional[int] = None
     neighborhood: Optional[str] = None
     city: Optional[str] = None
+    image_url: Optional[str] = None
 
 @app.get(
     "/properties",

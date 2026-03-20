@@ -146,6 +146,12 @@ class TecimobScraper(AgencyScraper):
 
             rooms: dict = raw.get("rooms") or {}
 
+           images = raw.get("images", [])
+            image_url = None
+            if images:
+                file_url_dict = images[0].get("file_url", {})
+                image_url = file_url_dict.get("medium") or file_url_dict.get("large")
+
             return Property(
                 agency=self.name,
                 title=(raw.get("title_formatted") or raw.get("meta_title") or "").strip(),
@@ -157,6 +163,7 @@ class TecimobScraper(AgencyScraper):
                 parking=safe_int((rooms.get("garage") or {}).get("value")),
                 neighborhood=neighborhood,
                 city=city,
+                image_url=image_url,
             )
         except Exception as exc:
             logger.warning("[%s] Failed to normalize listing %s: %s", self.name, raw.get("id"), exc)

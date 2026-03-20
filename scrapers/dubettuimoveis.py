@@ -124,6 +124,15 @@ class DubettuImoveisScraper(AgencyScraper):
             if area == 0.0:
                 area = None
 
+            cover_photo = raw.get("cover_photo")
+            image_url = None
+            if cover_photo and isinstance(cover_photo, dict):
+                image_url = cover_photo.get("url")
+            if not image_url:
+                photos = raw.get("photos", [])
+                if photos and isinstance(photos, list):
+                    image_url = photos[0].get("url")
+
             return Property(
                 agency=self.name,
                 title=title,
@@ -135,6 +144,7 @@ class DubettuImoveisScraper(AgencyScraper):
                 parking=safe_int(raw.get("garage")),
                 neighborhood=raw.get("neighborhood") or None,
                 city=raw.get("city") or None,
+                image_url=image_url,
             )
 
         except Exception as exc:

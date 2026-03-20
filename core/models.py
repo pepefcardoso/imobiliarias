@@ -14,6 +14,7 @@ class Property:
     parking: Optional[int] = field(default=None)
     neighborhood: Optional[str] = field(default=None)
     city: Optional[str] = field(default=None)
+    image_url: Optional[str] = field(default=None)
 
     def to_dict(self) -> dict:
         return {
@@ -27,6 +28,7 @@ class Property:
             "parking": self.parking,
             "neighborhood": self.neighborhood,
             "city": self.city,
+            "image_url": self.image_url,
         }
 
 @dataclass

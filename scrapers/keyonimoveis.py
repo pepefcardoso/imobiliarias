@@ -159,6 +159,13 @@ class KeyOnImoveisScraper(AgencyScraper):
 
             area_raw = raw.get("areaprincipal") or raw.get("areainterna")
 
+            image_url = raw.get("urlfotoprincipalp")
+            
+            if not image_url:
+                fotos = raw.get("fotos", [])
+                if fotos and isinstance(fotos, list):
+                    image_url = fotos[0].get("urlp")
+
             return Property(
                 agency=self.name,
                 title=raw.get("titulo", "").strip(),
@@ -170,6 +177,7 @@ class KeyOnImoveisScraper(AgencyScraper):
                 parking=safe_int(raw.get("numerovagas")),
                 neighborhood=raw.get("bairro") or None,
                 city=raw.get("cidade") or None,
+                image_url=image_url,
             )
 
         except Exception as exc:

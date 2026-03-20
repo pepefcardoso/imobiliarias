@@ -47,13 +47,13 @@
 
 **Objetivo:** Exibir miniaturas na tabela de resultados.
 
-- [ ] **Backend - Atualizar Modelos (`core/models.py` e `api/main.py`):**
+- [X] **Backend - Atualizar Modelos (`core/models.py` e `api/main.py`):**
   - Adicionar `image_url: Optional[str] = field(default=None)` ao `Property` e `PropertyResponse`.
-- [ ] **Backend - Atualizar Tecimob (`scrapers/tecimob_base.py`):**
+- [X] **Backend - Atualizar Tecimob (`scrapers/tecimob_base.py`):**
   - Adicionar `"photos"` ao parâmetro `include`. Extrair a URL da primeira foto no `_normalize()`.
-- [ ] **Backend - Atualizar Scrapers Customizados:**
+- [X] **Backend - Atualizar Scrapers Customizados:**
   - Extrair imagem principal em `dubettuimoveis.py`, `keyonimoveis.py` e no novo `chavesnamao.py`.
-- [ ] **Frontend - Renderizar Imagens (`index.html`):**
+- [X] **Frontend - Renderizar Imagens (`index.html`):**
   - Adicionar a coluna de Imagem no array `COLUMNS`. Injetar a tag `<img>` no `renderTable()`.
 
 ## 5. Melhorias de UI/UX

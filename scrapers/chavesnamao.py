@@ -120,25 +120,59 @@ class ChavesNaMaoScraper(AgencyScraper):
         Mapeia um único imóvel do JSON para a tua estrutura 'Property'.
         """
         try:
-            link = raw.get("link", "")
+            link = raw.get("link", "") or raw.get("url", "")
             full_url = link if link.startswith("http") else f"{BASE_URL}{link}"
             if not full_url or full_url == BASE_URL:
                 return None
             
-            price = raw.get("preco") or raw.get("valorVenda")
-            area = raw.get("areaUtil") or raw.get("areaTotal")
+            price = raw.get("preco") or raw.get("valorVenda") or raw.get("prices", {}).get("rawPrice")
+            area = raw.get("areaUtil") or raw.get("areaTotal") or raw.get("area", {}).get("useful")
             
+            image_url = None
+            image_url = raw.get("fotoDestaque")
+            
+            if not image_url:
+                fotos = raw.get("fotos", [])
+                if fotos and isinstance(fotos, list):
+                    primeira_foto = fotos[0]
+                    image_url = primeira_foto.get("url") if isinstance(primeira_foto, dict) else primeira_foto
+
+            if not image_url:
+                pictures = raw.get("pictures", {})
+                if isinstance(pictures, dict):
+                    partial_url = pictures.get("featured")
+                    if not partial_url and pictures.get("list"):
+                        partial_url = pictures.get("list")[0]
+                    
+                    if partial_url:
+                        if not partial_url.startswith("http"):
+                            image_url = f"https://www.chavesnamao.com.br/imn/0400X0262/N/60/imoveis/{partial_url}"
+                        else:
+                            image_url = partial_url
+                            
+            if not image_url:
+                image_url = raw.get("image")
+
+            location = raw.get("location", {})
+            bairro = raw.get("bairro") or raw.get("bairroNome") or location.get("neighborhoodName")
+            cidade = raw.get("cidade") or raw.get("cidadeNome") or location.get("cityName")
+
+            bedrooms = raw.get("quartos") or raw.get("bedrooms", {}).get("count")
+            bathrooms = raw.get("banheiros") or raw.get("bathrooms", {}).get("count")
+            parking = raw.get("vagas") or raw.get("garages", {}).get("count")
+
             return Property(
                 agency=self.name,
-                title=raw.get("titulo", "Imóvel em destaque").strip(),
+                title=(raw.get("titulo") or raw.get("title") or "Imóvel em destaque").strip(),
                 url=full_url,
                 price=parse_price(price),
                 area=parse_area(area),
-                bedrooms=safe_int(raw.get("quartos")),
-                bathrooms=safe_int(raw.get("banheiros")),
-                parking=safe_int(raw.get("vagas")),
-                neighborhood=raw.get("bairro") or raw.get("bairroNome"),
-                city=raw.get("cidade") or raw.get("cidadeNome"),
+                bedrooms=safe_int(bedrooms),
+                bathrooms=safe_int(bathrooms),
+                parking=safe_int(parking),
+                neighborhood=bairro,
+                city=cidade,
+                image_url=image_url,
             )
         except Exception as exc:
             logger.warning("[%s] Erro ao tentar normalizar um imóvel: %s", self.name, exc)

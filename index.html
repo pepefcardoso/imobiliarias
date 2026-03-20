@@ -846,6 +846,7 @@
       }
 
       const COLUMNS = [
+        { key: "image_url", label: "Imagem", sortable: false },
         { key: "title", label: "Imóvel", sortable: false },
         { key: "price", label: "Preço", sortable: true },
         { key: "area", label: "Área", sortable: true },
@@ -857,6 +858,15 @@
         { key: "agency", label: "Imobiliária", sortable: true },
         { key: "_link", label: "Ver", sortable: false },
       ];
+
+      function fmtImage(url) {
+        if (!url) {
+          return '<div style="width:64px;height:48px;background:#e8e4dc;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#a89f93;font-size:0.6rem;text-transform:uppercase;">Sem foto</div>';
+        }
+        return `<img src="${esc(
+          url,
+        )}" alt="Miniatura" loading="lazy" style="width:64px;height:48px;object-fit:cover;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">`;
+      }
 
       function renderTable() {
         const sorted = sortData(allData);
@@ -890,7 +900,7 @@
           .map((p, i) => {
             const delay = i * 15 + "ms";
             return `<tr style="animation-delay:${delay}">
-            <td class="title-cell">
+            <td>${fmtImage(p.image_url)}</td> <td class="title-cell">
               <div class="listing-title">${esc(p.title || "–")}</div>
               <div class="listing-agency">${esc(p.agency)}</div>
             </td>
