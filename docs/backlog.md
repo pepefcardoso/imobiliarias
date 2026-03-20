@@ -28,17 +28,17 @@
 
 **Objetivo:** Transitar de pesquisa de cidade em texto livre para dropdowns estruturados.
 
-- [ ] **Backend - Atualizar Modelos (`core/models.py`):**
+- [X] **Backend - Atualizar Modelos (`core/models.py`):**
   - Adicionar `neighborhood: Optional[str] = field(default=None)` à classe `SearchQuery`.
-- [ ] **Backend - Atualizar API (`api/main.py`):**
+- [X] **Backend - Atualizar API (`api/main.py`):**
   - Adicionar o parâmetro `neighborhood: Optional[str] = Query(default=None)` na função `get_properties`.
   - Passar este parâmetro na instanciação do objeto `SearchQuery`.
-- [ ] **Backend - Forçar Filtro de Bairro (`services/aggregator.py`):**
+- [X] **Backend - Forçar Filtro de Bairro (`services/aggregator.py`):**
   - Na função `_apply_strict_filters`, adicionar lógica para filtrar bairros exatos (case-insensitive).
-- [ ] **Frontend - Atualizar UI de Cidade (`index.html`):**
+- [X] **Frontend - Atualizar UI de Cidade (`index.html`):**
   - Substituir o `<input type="text" id="filter-city">` por um `<select id="filter-city">`.
   - Adicionar as opções fixas (ex: "Todos", "Tubarão", "Capivari de Baixo", "Laguna").
-- [ ] **Frontend - Adicionar UI de Bairro (`index.html`):**
+- [X] **Frontend - Adicionar UI de Bairro (`index.html`):**
   - Criar um `<select id="filter-neighborhood">` ao lado da cidade.
   - Escrever função JavaScript para popular dinamicamente as opções de bairros dependendo da cidade selecionada.
   - Atualizar o envio e exibição dos filtros.

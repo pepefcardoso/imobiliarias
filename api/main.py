@@ -173,6 +173,11 @@ def get_properties(
         description="Filter by city name (case-insensitive, partial match).",
         examples=["Tubarão"],
     ),
+    neighborhood: Optional[str] = Query(
+        default=None,
+        description="Filter by neighborhood name (case-insensitive, exact match).",
+        examples=["Centro"],
+    ),
     min_price: Optional[float] = Query(
         default=None,
         ge=0,
@@ -214,6 +219,7 @@ def get_properties(
 
     query = SearchQuery(
         city=city,
+        neighborhood=neighborhood,
         min_price=min_price,
         max_price=max_price,
         min_bedrooms=min_bedrooms,

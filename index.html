@@ -502,13 +502,18 @@
       <div class="controls-section">
         <div class="control-group">
           <label>Cidade</label>
-          <input
-            id="filter-city"
-            type="text"
-            placeholder="ex: Tubarão"
-            value="Tubarão"
-            style="min-width: 120px"
-          />
+          <select id="filter-city" style="min-width: 140px">
+            <option value="">Todas as Cidades</option>
+            <option value="Tubarão" selected>Tubarão</option>
+            <option value="Capivari de Baixo">Capivari de Baixo</option>
+            <option value="Laguna">Laguna</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Bairro</label>
+          <select id="filter-neighborhood" style="min-width: 150px">
+            <option value="">Todos os bairros</option>
+          </select>
         </div>
       </div>
 
@@ -642,11 +647,58 @@
       const paginationEl = document.getElementById("pagination");
       const filterSummaryEl = document.getElementById("filter-summary");
 
+      const DICIONARIO_BAIRROS = {
+        Tubarão: [
+          "Centro",
+          "Oficinas",
+          "Vila Moema",
+          "Dehon",
+          "Humaitá",
+          "Passagem",
+          "Santo Antônio de Pádua",
+          "Morrotes",
+          "São João",
+          "Revoredo",
+          "Campanhas",
+        ],
+        "Capivari de Baixo": [
+          "Centro",
+          "Três de Maio",
+          "Santa Lúcia",
+          "Santo André",
+        ],
+        Laguna: ["Centro", "Mar Grosso", "Progresso", "Portinho", "Cabeçuda"],
+      };
+
+      function atualizarBairros() {
+        const city = document.getElementById("filter-city").value;
+        const neighSelect = document.getElementById("filter-neighborhood");
+
+        neighSelect.innerHTML = '<option value="">Todos os bairros</option>';
+
+        if (city && DICIONARIO_BAIRROS[city]) {
+          const bairros = DICIONARIO_BAIRROS[city].sort();
+          bairros.forEach((bairro) => {
+            neighSelect.innerHTML += `<option value="${bairro}">${bairro}</option>`;
+          });
+          neighSelect.disabled = false;
+        } else {
+          neighSelect.disabled = true;
+        }
+      }
+
+      document
+        .getElementById("filter-city")
+        .addEventListener("change", atualizarBairros);
+
       async function fetchProperties() {
         if (loading) return;
         loading = true;
 
-        const city = document.getElementById("filter-city").value.trim();
+        const city = document.getElementById("filter-city").value;
+        const neighborhood = document.getElementById(
+          "filter-neighborhood",
+        ).value;
         const bedrooms = document.getElementById("filter-bedrooms").value;
         const bathrooms = document.getElementById("filter-bathrooms").value;
         const parking = document.getElementById("filter-parking").value;
@@ -657,6 +709,7 @@
 
         const params = new URLSearchParams();
         if (city) params.set("city", city);
+        if (neighborhood) params.set("neighborhood", neighborhood);
         if (bedrooms) params.set("min_bedrooms", bedrooms);
         if (bathrooms) params.set("min_bathrooms", bathrooms);
         if (parking) params.set("min_parking", parking);
@@ -669,6 +722,7 @@
         errorArea.innerHTML = "";
         renderFilterSummary({
           city,
+          neighborhood,
           bedrooms,
           bathrooms,
           parking,
@@ -711,6 +765,7 @@
 
       function renderFilterSummary({
         city,
+        neighborhood,
         bedrooms,
         bathrooms,
         parking,
@@ -721,6 +776,7 @@
       }) {
         const pills = [];
         if (city) pills.push(`📍 ${city}`);
+        if (neighborhood) pills.push(`🏘️ ${neighborhood}`);
         if (maxPrice)
           pills.push(`💰 até R$ ${Number(maxPrice).toLocaleString("pt-BR")}`);
         if (minPrice)
@@ -916,6 +972,7 @@
 
       const DEFAULTS = {
         city: "Tubarão",
+        neighborhood: "",
         minPrice: "",
         maxPrice: "320000",
         bedrooms: "1",
@@ -927,6 +984,9 @@
 
       function applyDefaults() {
         document.getElementById("filter-city").value = DEFAULTS.city;
+        atualizarBairros();
+        document.getElementById("filter-neighborhood").value =
+          DEFAULTS.neighborhood;
         document.getElementById("filter-min-price").value = DEFAULTS.minPrice;
         document.getElementById("filter-max-price").value = DEFAULTS.maxPrice;
         document.getElementById("filter-bedrooms").value = DEFAULTS.bedrooms;
@@ -953,6 +1013,7 @@
         });
 
       applyDefaults();
+      atualizarBairros();
       fetchProperties();
     </script>
   </body>

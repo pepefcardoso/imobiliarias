@@ -144,6 +144,10 @@ class Aggregator:
             if query.city:
                 if not p.city or query.city.lower() not in p.city.lower():
                     continue
+
+            if query.neighborhood:
+                if not p.neighborhood or query.neighborhood.lower() != p.neighborhood.lower():
+                    continue
                     
             filtered.append(p)
             

@@ -29,10 +29,10 @@ class Property:
             "city": self.city,
         }
 
-
 @dataclass
 class SearchQuery:
     city: Optional[str] = field(default=None)
+    neighborhood: Optional[str] = field(default=None)
     min_price: Optional[float] = field(default=None)
     max_price: Optional[float] = field(default=None)
     min_bedrooms: Optional[int] = field(default=None)
