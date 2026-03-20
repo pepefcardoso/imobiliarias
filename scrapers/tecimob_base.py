@@ -146,7 +146,7 @@ class TecimobScraper(AgencyScraper):
 
             rooms: dict = raw.get("rooms") or {}
 
-           images = raw.get("images", [])
+            images = raw.get("images", [])
             image_url = None
             if images:
                 file_url_dict = images[0].get("file_url", {})
