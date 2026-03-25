@@ -159,7 +159,40 @@
 
     <div id="image-modal" class="modal">
       <span class="modal-close" onclick="closeModal()">&times;</span>
-      <img class="modal-content" id="modal-img">
+      <img class="modal-content" id="modal-img" />
+    </div>
+
+    <div id="sources-modal" class="modal">
+      <div
+        class="modal-content"
+        style="
+          background: var(--surface);
+          padding: 1.5rem;
+          border-radius: 8px;
+          width: 90%;
+          max-width: 450px;
+        "
+      >
+        <span
+          class="modal-close"
+          style="top: 15px; right: 20px; color: var(--ink)"
+          onclick="closeSourcesModal()"
+          >&times;</span
+        >
+        <h3 style="margin-bottom: 1rem; font-family: 'Playfair Display', serif">
+          Anunciado em:
+        </h3>
+        <div
+          id="sources-list"
+          style="
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            max-height: 60vh;
+            overflow-y: auto;
+          "
+        ></div>
+      </div>
     </div>
 
     <script src="script.js"></script>

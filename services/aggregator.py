@@ -34,6 +34,61 @@ class Aggregator:
             
         return self._apply_strict_filters(properties, query)
 
+    def search(self, query: SearchQuery) -> list[Property]:
+        if self.concurrent:
+            properties = self._collect_concurrent(query)
+        else:
+            properties = self._collect_sequential(query)
+            
+        filtered = self._apply_strict_filters(properties, query)
+        
+        return self._deduplicate_properties(filtered)
+
+    def _deduplicate_properties(self, properties: list[Property]) -> list[Property]:
+        deduped: list[Property] = []
+
+        for p in properties:
+            if not p.source_links:
+                p.source_links = [{"agency": p.agency, "url": p.url, "price": p.price}]
+
+            is_duplicate = False
+            for d in deduped:
+                if (
+                    (p.city or "").lower() == (d.city or "").lower() and
+                    (p.neighborhood or "").lower() == (d.neighborhood or "").lower() and
+                    p.bedrooms == d.bedrooms and
+                    p.bathrooms == d.bathrooms
+                ):
+                    if self._is_within_tolerance(p.price, d.price, 0.05) and \
+                       self._is_within_tolerance(p.area, d.area, 0.05):
+                        
+                        d.source_links.append({"agency": p.agency, "url": p.url, "price": p.price})
+                        is_duplicate = True
+                        break
+            
+            if not is_duplicate:
+                deduped.append(p)
+
+        logger.info("[aggregator] Deduplication applied: %d in -> %d out", len(properties), len(deduped))
+        return deduped
+
+    @staticmethod
+    def _is_within_tolerance(val1: float | None, val2: float | None, tolerance: float) -> bool:
+        """
+        Verifica se dois valores numéricos estão dentro da tolerância permitida.
+        Trata None de forma segura (ambos None = Match; um None = No Match).
+        """
+        if val1 is None and val2 is None:
+            return True
+        if val1 is None or val2 is None:
+            return False
+        if val1 == 0 and val2 == 0:
+            return True
+        if val1 == 0 or val2 == 0:
+            return False
+        
+        return abs(val1 - val2) / max(val1, val2) <= tolerance
+
     def _collect_sequential(self, query: SearchQuery) -> list[Property]:
         properties: list[Property] = []
 

@@ -17,6 +17,7 @@ class Property:
     image_url: Optional[str] = field(default=None)
     latitude: Optional[float] = field(default=None)
     longitude: Optional[float] = field(default=None)
+    source_links: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -33,6 +34,7 @@ class Property:
             "image_url": self.image_url,
             "latitude": self.latitude,
             "longitude": self.longitude,
+            "source_links": self.source_links,
         }
 
 @dataclass

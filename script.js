@@ -443,6 +443,18 @@ function renderTable() {
   const rows = pageData
     .map((p, i) => {
       const delay = i * 15 + "ms";
+
+      let agencyHtml = `<span class="badge">${esc(p.agency)}</span>`;
+      let actionHtml = `<a class="link" href="${esc(
+        p.url,
+      )}" target="_blank" rel="noopener">Ver →</a>`;
+
+      if (p.source_links && p.source_links.length > 1) {
+        agencyHtml = `<span class="badge" style="background: var(--green); color: white; border: none;">Listado em ${p.source_links.length} imobiliárias</span>`;
+        const encodedLinks = encodeURIComponent(JSON.stringify(p.source_links));
+        actionHtml = `<button class="btn btn-ghost" style="height: 26px; padding: 0 10px; font-size: 0.75rem;" onclick="openSourcesModal('${encodedLinks}')">Ver links</button>`;
+      }
+
       return `<tr style="animation-delay:${delay}">
     <td>${fmtImage(p.image_url)}</td> 
     <td class="title-cell">
@@ -450,20 +462,20 @@ function renderTable() {
       <div class="listing-agency">${esc(p.agency)}</div>
     </td>
     <td>${fmtPrice(p.price)}</td>
-    <td>${fmtPriceSqm(p.price_sqm)}</td> <td>${fmtArea(p.area)}</td>
+    <td>${fmtPriceSqm(p.price_sqm)}</td> 
+    <td>${fmtArea(p.area)}</td>
     <td>${fmtInt(p.bedrooms)}</td>
     <td>${fmtInt(p.bathrooms)}</td>
     <td>${fmtInt(p.parking)}</td>
-    <td>${fmtDistance(p.distance)}</td> <td>${
-        p.neighborhood
-          ? `<span class="tag">${esc(p.neighborhood)}</span>`
-          : '<span class="null-dash">—</span>'
-      }</td>
+    <td>${fmtDistance(p.distance)}</td> 
+    <td>${
+      p.neighborhood
+        ? `<span class="tag">${esc(p.neighborhood)}</span>`
+        : '<span class="null-dash">—</span>'
+    }</td>
     <td>${p.city ? esc(p.city) : '<span class="null-dash">—</span>'}</td>
-    <td><span class="badge">${esc(p.agency)}</span></td>
-    <td><a class="link" href="${esc(
-      p.url,
-    )}" target="_blank" rel="noopener">Ver →</a></td>
+    <td>${agencyHtml}</td>
+    <td>${actionHtml}</td>
   </tr>`;
     })
     .join("");
@@ -568,6 +580,52 @@ const DEFAULTS = {
   minArea: "50",
   maxArea: "",
 };
+
+function openSourcesModal(encodedLinks) {
+  const links = JSON.parse(decodeURIComponent(encodedLinks));
+  const container = document.getElementById("sources-list");
+
+  container.innerHTML = links
+    .map((l) => {
+      const priceFmt = l.price
+        ? `R$ ${Number(l.price).toLocaleString("pt-BR")}`
+        : "Preço sob consulta";
+      return `
+      <div style="padding: 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <strong style="display: block; font-size: 0.95rem; text-transform: capitalize;">${esc(
+            l.agency,
+          )}</strong>
+          <span style="color: var(--green); font-size: 0.85rem; font-weight: 500;">${priceFmt}</span>
+        </div>
+        <a href="${esc(
+          l.url,
+        )}" target="_blank" class="btn btn-primary" style="text-decoration: none; font-size: 0.8rem; padding: 0 1.2rem; height: 32px;">Acessar</a>
+      </div>
+    `;
+    })
+    .join("");
+
+  document.getElementById("sources-modal").style.display = "flex";
+}
+
+function closeSourcesModal() {
+  document.getElementById("sources-modal").style.display = "none";
+}
+
+window.addEventListener("click", function (event) {
+  const imgModal = document.getElementById("image-modal");
+  const srcModal = document.getElementById("sources-modal");
+  if (event.target === imgModal) closeModal();
+  if (event.target === srcModal) closeSourcesModal();
+});
+
+window.addEventListener("keydown", function (event) {
+  if (event.key === "Escape") {
+    closeModal();
+    closeSourcesModal();
+  }
+});
 
 function applyDefaults() {
   document.getElementById("filter-city").value = DEFAULTS.city;

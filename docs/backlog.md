@@ -28,11 +28,11 @@ Descrição: Imóveis idênticos anunciados por diferentes imobiliárias estão 
 
 Critérios de Aceite:
 
-    [ ] A tabela de resultados deve exibir apenas 1 linha por imóvel único.
+    [X] A tabela de resultados deve exibir apenas 1 linha por imóvel único.
 
-    [ ] A coluna "Imobiliária" deve mostrar uma tag especial (ex: "Listado em 3 Imobiliárias") quando houver duplicidade.
+    [X] A coluna "Imobiliária" deve mostrar uma tag especial (ex: "Listado em 3 Imobiliárias") quando houver duplicidade.
 
-    [ ] Ao clicar na linha, o usuário deve conseguir ver os links de todas as imobiliárias que anunciaram aquele imóvel.
+    [X] Ao clicar na linha, o usuário deve conseguir ver os links de todas as imobiliárias que anunciaram aquele imóvel.
 
 Detalhes Técnicos:
 
