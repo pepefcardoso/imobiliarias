@@ -1,6 +1,5 @@
 import json
 import logging
-import re
 import unicodedata
 from typing import Any, Optional
 
@@ -13,6 +12,7 @@ from scrapers.base import AgencyScraper
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://www.chavesnamao.com.br"
+API_URL = f"{BASE_URL}/api/realestate/listing/items/premiumList/"
 
 class ChavesNaMaoScraper(AgencyScraper):
     name = "chavesnamao"
@@ -24,7 +24,7 @@ class ChavesNaMaoScraper(AgencyScraper):
     ) -> None:
         super().__init__(config=config, client=client)
         self.client._session.headers.update({
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept": "application/json",
             "Host": "www.chavesnamao.com.br",
             "Referer": BASE_URL,
         })
@@ -34,30 +34,26 @@ class ChavesNaMaoScraper(AgencyScraper):
         page = 1
         
         while page <= self.max_pages:
-            logger.info("[%s] A extrair a página %d", self.name, page)
+            logger.info("[%s] A extrair a página %d via API", self.name, page)
             
-            url, params = self._build_url_and_params(query, page)
+            params = self._build_api_params(query, page)
             
             try:
-                html = self.client.get(url, params=params)
+                data = self.client.get_json(API_URL, params=params)
                 
-                match = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', html, re.DOTALL)
-                if not match:
-                    logger.warning("[%s] Bloco de dados JSON não encontrado na página %d.", self.name, page)
-                    break
-                    
-                data = json.loads(match.group(1))
+                if isinstance(data, str):
+                    try:
+                        data = json.loads(data)
+                    except json.JSONDecodeError:
+                        logger.error("[%s] A API retornou um texto inesperado: %s", self.name, data[:250])
+                        break
                 
-                listings = []
-                try:
-                    page_props = data.get("props", {}).get("pageProps", {})
-                    listings = page_props.get("initialState", {}).get("search", {}).get("result", [])
-                    if not listings:
-                        listings = page_props.get("imoveis", [])
-                except Exception as e:
-                    logger.error("[%s] Erro a navegar no JSON: %s", self.name, e)
+                if not data or not isinstance(data, dict):
+                    logger.warning("[%s] Formato de dados inválido recebido da API.", self.name)
                     break
-                    
+
+                listings = data.get("items", [])
+                
                 if not listings:
                     logger.info("[%s] Nenhum imóvel encontrado na página %d — a parar.", self.name, page)
                     break
@@ -76,27 +72,29 @@ class ChavesNaMaoScraper(AgencyScraper):
         logger.info("[%s] Concluído. %d imóveis recolhidos.", self.name, len(properties))
         return properties
 
-    def _build_url_and_params(self, query: SearchQuery, page: int) -> tuple[str, dict]:
+    def _build_api_params(self, query: SearchQuery, page: int) -> dict:
         """
-        Traduz os critérios de busca (SearchQuery) para o formato do ChavesNaMao.
+        Monta o objeto JSON 'searchParams' idêntico ao que o front-end do site envia.
         """
-        base = f"{BASE_URL}/imoveis/a-venda"
-        
         cidade = "sc-tubarao"
         if query.city:
             cidade_limpa = ''.join(c for c in unicodedata.normalize('NFD', query.city) if unicodedata.category(c) != 'Mn').lower()
             cidade_limpa = cidade_limpa.replace(' ', '-')
             cidade = f"sc-{cidade_limpa}"
             
-        url = f"{base}/{cidade}"
+        search_params = {
+            "viewport": "desktop",
+            "level1": "imoveis-a-venda",
+            "level2": cidade
+        }
         
         if query.min_bedrooms:
             if query.min_bedrooms == 1:
-                url += "/1-quarto"
+                search_params["level3"] = "1-quarto"
             elif query.min_bedrooms >= 5:
-                url += "/5-ou-mais-quartos"
+                search_params["level3"] = "5-ou-mais-quartos"
             else:
-                url += f"/{query.min_bedrooms}-quartos"
+                search_params["level3"] = f"{query.min_bedrooms}-quartos"
                 
         filtros = []
         if query.min_price: filtros.append(f"pmin:{int(query.min_price)}")
@@ -106,64 +104,54 @@ class ChavesNaMaoScraper(AgencyScraper):
         if query.min_bathrooms: filtros.append(f"ban:{int(query.min_bathrooms)}")
         if query.min_parking: filtros.append(f"gar:{int(query.min_parking)}")
         
-        params = {}
         if filtros:
-            params["filtro"] = ",".join(filtros)
-        
-        if page > 1:
-            params["pg"] = page
+            search_params["filtro"] = ",".join(filtros)
             
-        return url, params
+        if page > 1:
+            search_params["pg"] = str(page)
+            
+        return {"searchParams": json.dumps(search_params, separators=(',', ':'))}
 
     def _normalize(self, raw: dict[str, Any]) -> Optional[Property]:
         """
-        Mapeia um único imóvel do JSON para a tua estrutura 'Property'.
+        Mapeia os campos exatos do novo payload JSON da API.
         """
         try:
-            link = raw.get("link", "") or raw.get("url", "")
-            full_url = link if link.startswith("http") else f"{BASE_URL}{link}"
-            if not full_url or full_url == BASE_URL:
+            link = raw.get("url", "")
+            if not link:
                 return None
+            full_url = link if link.startswith("http") else f"{BASE_URL}{link}"
             
-            price = raw.get("preco") or raw.get("valorVenda") or raw.get("prices", {}).get("rawPrice")
-            area = raw.get("areaUtil") or raw.get("areaTotal") or raw.get("area", {}).get("useful")
+            prices = raw.get("prices", {})
+            price = prices.get("rawPrice") or prices.get("main")
+            
+            area_obj = raw.get("area", {})
+            area = area_obj.get("useful") or area_obj.get("total")
             
             image_url = None
-            image_url = raw.get("fotoDestaque")
-            
-            if not image_url:
-                fotos = raw.get("fotos", [])
-                if fotos and isinstance(fotos, list):
-                    primeira_foto = fotos[0]
-                    image_url = primeira_foto.get("url") if isinstance(primeira_foto, dict) else primeira_foto
-
-            if not image_url:
-                pictures = raw.get("pictures", {})
-                if isinstance(pictures, dict):
-                    partial_url = pictures.get("featured")
-                    if not partial_url and pictures.get("list"):
-                        partial_url = pictures.get("list")[0]
-                    
-                    if partial_url:
-                        if not partial_url.startswith("http"):
-                            image_url = f"https://www.chavesnamao.com.br/imn/0400X0262/N/60/imoveis/{partial_url}"
-                        else:
-                            image_url = partial_url
-                            
-            if not image_url:
-                image_url = raw.get("image")
+            pictures = raw.get("pictures", {})
+            if isinstance(pictures, dict):
+                partial_url = pictures.get("featured")
+                if not partial_url and pictures.get("list"):
+                    partial_url = pictures.get("list")[0]
+                
+                if partial_url:
+                    if not partial_url.startswith("http"):
+                        image_url = f"https://www.chavesnamao.com.br/imn/0400X0262/N/60/imoveis/{partial_url}"
+                    else:
+                        image_url = partial_url
 
             location = raw.get("location", {})
-            bairro = raw.get("bairro") or raw.get("bairroNome") or location.get("neighborhoodName")
-            cidade = raw.get("cidade") or raw.get("cidadeNome") or location.get("cityName")
+            bairro = location.get("neighborhood", {}).get("name")
+            cidade = location.get("city", {}).get("name")
 
-            bedrooms = raw.get("quartos") or raw.get("bedrooms", {}).get("count")
-            bathrooms = raw.get("banheiros") or raw.get("bathrooms", {}).get("count")
-            parking = raw.get("vagas") or raw.get("garages", {}).get("count")
+            bedrooms = raw.get("bedrooms", {}).get("count")
+            bathrooms = raw.get("bathrooms", {}).get("count")
+            parking = raw.get("garages", {}).get("count")
 
             return Property(
                 agency=self.name,
-                title=(raw.get("titulo") or raw.get("title") or "Imóvel em destaque").strip(),
+                title=(raw.get("title") or "Imóvel em destaque").strip(),
                 url=full_url,
                 price=parse_price(price),
                 area=parse_area(area),
