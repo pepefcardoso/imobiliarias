@@ -23,18 +23,6 @@ class Aggregator:
         self.max_workers = max_workers or settings.max_workers
 
     def search(self, query: SearchQuery) -> list[Property]:
-        """
-        Executa a recolha em todos os scrapers passando a query do utilizador,
-        e aplica o filtro de segurança final (Safety Net) antes de devolver os resultados.
-        """
-        if self.concurrent:
-            properties = self._collect_concurrent(query)
-        else:
-            properties = self._collect_sequential(query)
-            
-        return self._apply_strict_filters(properties, query)
-
-    def search(self, query: SearchQuery) -> list[Property]:
         if self.concurrent:
             properties = self._collect_concurrent(query)
         else:
