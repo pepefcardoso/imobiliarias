@@ -167,5 +167,41 @@ settings = Settings(
             use_browser=False,
             max_pages=10,
         ),
+        AgencyConfig(
+            name="iata",
+            url="https://iata.com.br",
+            use_browser=False,
+            max_pages=10,
+        ),
+        AgencyConfig(
+            name="oppenheimimoveis",
+            url="https://oppenheimimoveis.com.br",
+            use_browser=False,
+            max_pages=10,
+        ),
+        AgencyConfig(
+            name="felixmarques",
+            url="https://felixmarques.com.br",
+            use_browser=False,
+            max_pages=10,
+        ),
+        AgencyConfig(
+            name="residesulimoveis",
+            url="https://residesulimoveis.com.br",
+            use_browser=False,
+            max_pages=10,
+        ),
+        AgencyConfig(
+            name="moradaimoveistb",
+            url="https://moradaimoveistb.com.br",
+            use_browser=False,
+            max_pages=10,
+        ),
+        AgencyConfig(
+            name="imobiliariaconquista",
+            url="https://imobiliariaconquista.log.br",
+            use_browser=False,
+            max_pages=10,
+        ),
     ],
 )

@@ -66,6 +66,12 @@ from scrapers.rfnegocios import RFNegociosScraper
 from scrapers.sittuarimoveis import SittuarImoveisScraper
 from scrapers.vendimoveis import VendimoveisScraper
 from scrapers.chavesnamao import ChavesNaMaoScraper
+from scrapers.iata import IataScraper
+from scrapers.oppenheimimoveis import OppenheimImoveisScraper
+from scrapers.felixmarques import FelixMarquesScraper
+from scrapers.residesulimoveis import ResideSulImoveisScraper
+from scrapers.moradaimoveistb import MoradaImoveisTbScraper
+from scrapers.imobiliariaconquista import ImobiliariaConquistaScraper
 
 SCRAPER_REGISTRY: dict[str, type[AgencyScraper]] = {
     "keyonimoveis": KeyOnImoveisScraper,
@@ -90,6 +96,12 @@ SCRAPER_REGISTRY: dict[str, type[AgencyScraper]] = {
     "dubettuimoveis": DubettuImoveisScraper,
     "pauloemayer": PauloEMayerScraper,
     "chavesnamao": ChavesNaMaoScraper,
+    "iata": IataScraper,
+    "oppenheimimoveis": OppenheimImoveisScraper,
+    "felixmarques": FelixMarquesScraper,
+    "residesulimoveis": ResideSulImoveisScraper,
+    "moradaimoveistb": MoradaImoveisTbScraper,
+    "imobiliariaconquista": ImobiliariaConquistaScraper,
 }
 
 class _AppState:
