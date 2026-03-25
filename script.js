@@ -405,7 +405,9 @@ function fmtImage(url) {
   }
   return `<img src="${esc(
     url,
-  )}" alt="Miniatura" loading="lazy" style="width:64px;height:48px;object-fit:cover;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">`;
+  )}" alt="Miniatura" loading="lazy" class="clickable-img" onclick="openModal('${esc(
+    url,
+  )}')" style="width:64px;height:48px;object-fit:cover;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">`;
 }
 
 function renderTable() {
@@ -522,6 +524,29 @@ function goPage(n) {
     });
   }
 }
+
+function openModal(url) {
+  const modal = document.getElementById("image-modal");
+  const modalImg = document.getElementById("modal-img");
+  modal.style.display = "flex";
+  modalImg.src = url;
+}
+
+function closeModal() {
+  document.getElementById("image-modal").style.display = "none";
+  document.getElementById("modal-img").src = "";
+}
+
+window.addEventListener("click", function (event) {
+  const modal = document.getElementById("image-modal");
+  if (event.target === modal) {
+    closeModal();
+  }
+});
+
+window.addEventListener("keydown", function (event) {
+  if (event.key === "Escape") closeModal();
+});
 
 function esc(s) {
   if (!s) return "";
