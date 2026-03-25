@@ -203,5 +203,17 @@ settings = Settings(
             use_browser=False,
             max_pages=10,
         ),
+        AgencyConfig(
+            name="vendelar",
+            url="https://www.vendelar.com.br",
+            use_browser=False,
+            max_pages=10,
+        ),
+        AgencyConfig(
+            name="imobiliariatubarao",
+            url="https://imobiliariatubarao.com.br",
+            use_browser=False,
+            max_pages=10,
+        ),
     ],
 )
