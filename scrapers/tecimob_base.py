@@ -141,8 +141,10 @@ class TecimobScraper(AgencyScraper):
                 areas = {}
             area_block = areas.get("total_area") or areas.get("primary_area") or {}
 
-            address_fmt: str = (raw.get("address") or {}).get("formatted", "")
+            address_block = raw.get("address") or {}
+            address_fmt: str = address_block.get("formatted", "")
             neighborhood, city = _split_address(address_fmt)
+            street = address_block.get("street") or address_block.get("name") or None
 
             rooms: dict = raw.get("rooms") or {}
 
@@ -165,6 +167,7 @@ class TecimobScraper(AgencyScraper):
                 bathrooms=safe_int((rooms.get("bathroom") or {}).get("value")),
                 parking=safe_int((rooms.get("garage") or {}).get("value")),
                 condo_fee=parse_condo_fee(condo_price_raw, description),
+                street=street,
                 neighborhood=neighborhood,
                 city=city,
                 image_url=image_url,

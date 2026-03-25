@@ -10,6 +10,19 @@
       href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap"
       rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      crossorigin=""
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"
+    />
 
     <link rel="stylesheet" href="style.css" />
   </head>
@@ -145,10 +158,46 @@
     <div class="filter-summary" id="filter-summary" style="display: none"></div>
 
     <div class="status-bar" id="status-bar">
-      <span id="status-text">Clique em Buscar para carregar imóveis.</span>
-      <span id="status-api" style="font-size: 0.72rem"
-        >API: <code>https://imobiliarias.onrender.com</code></span
-      >
+      <div>
+        <span id="status-text">Clique em Buscar para carregar imóveis.</span>
+        <span id="status-api" style="font-size: 0.72rem; margin-left: 10px"
+          >API: <code>https://imobiliarias.onrender.com</code></span
+        >
+      </div>
+      <div class="view-toggle">
+        <button
+          id="btn-view-table"
+          class="btn btn-ghost active"
+          style="height: 30px; font-size: 0.75rem"
+        >
+          Tabela
+        </button>
+        <button
+          id="btn-view-map"
+          class="btn btn-ghost"
+          style="height: 30px; font-size: 0.75rem"
+        >
+          Mapa
+        </button>
+      </div>
+    </div>
+
+    <div id="view-table-section">
+      <div class="table-wrap">
+        <div id="table-container"></div>
+      </div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+
+    <div id="view-map-section" style="display: none; padding: 0 2.5rem 2rem">
+      <div
+        id="map-container"
+        style="width: 100%; height: 65vh; border-radius: 8px; z-index: 1"
+      ></div>
+      <div style="font-size: 0.75rem; color: var(--ink-muted); margin-top: 8px">
+        * Os imóveis são localizados progressivamente para não sobrecarregar os
+        servidores do mapa.
+      </div>
     </div>
 
     <div id="error-area"></div>
@@ -196,5 +245,10 @@
     </div>
 
     <script src="script.js"></script>
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      crossorigin=""
+    ></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
   </body>
 </html>

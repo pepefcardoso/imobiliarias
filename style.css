@@ -547,6 +547,27 @@ a.link:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
+.view-toggle {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.view-toggle .btn {
+  padding: 0 1rem;
+}
+
+.view-toggle .btn.active {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+
+#map-container {
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  background: #e8e4dc;
+}
+
 @media (max-width: 768px) {
   header {
     padding: 1.4rem 1.2rem;

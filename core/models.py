@@ -13,6 +13,7 @@ class Property:
     bathrooms: Optional[int] = field(default=None)
     parking: Optional[int] = field(default=None)
     condo_fee: Optional[float] = field(default=None)
+    street: Optional[str] = field(default=None)
     neighborhood: Optional[str] = field(default=None)
     city: Optional[str] = field(default=None)
     image_url: Optional[str] = field(default=None)
@@ -31,6 +32,7 @@ class Property:
             "bathrooms": self.bathrooms,
             "parking": self.parking,
             "condo_fee": self.condo_fee,
+            "street": self.street,
             "neighborhood": self.neighborhood,
             "city": self.city,
             "image_url": self.image_url,

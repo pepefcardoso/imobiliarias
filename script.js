@@ -7,6 +7,13 @@ let sortDir = "asc";
 let currentPage = 1;
 let loading = false;
 
+let currentView = "table";
+let map = null;
+let markersGroup = null;
+let geocodeQueue = [];
+let isGeocoding = false;
+let geocodeCache = JSON.parse(sessionStorage.getItem("geocodeCache") || "{}");
+
 const statusText = document.getElementById("status-text");
 const errorArea = document.getElementById("error-area");
 const tableContainer = document.getElementById("table-container");
@@ -112,6 +119,184 @@ const CITY_CENTERS = {
   Laguna: { lat: -28.4816, lng: -48.7811 },
   Jaguaruna: { lat: -28.6141, lng: -49.0253 },
 };
+
+document
+  .getElementById("btn-view-table")
+  .addEventListener("click", () => setView("table"));
+document
+  .getElementById("btn-view-map")
+  .addEventListener("click", () => setView("map"));
+
+function setView(view) {
+  currentView = view;
+  if (view === "table") {
+    document.getElementById("view-table-section").style.display = "block";
+    document.getElementById("view-map-section").style.display = "none";
+    document.getElementById("btn-view-table").classList.add("active");
+    document.getElementById("btn-view-map").classList.remove("active");
+  } else {
+    document.getElementById("view-table-section").style.display = "none";
+    document.getElementById("view-map-section").style.display = "block";
+    document.getElementById("btn-view-table").classList.remove("active");
+    document.getElementById("btn-view-map").classList.add("active");
+    initMap();
+    startGeocoding();
+  }
+}
+
+function initMap() {
+  if (!map) {
+    const city = document.getElementById("filter-city").value || "Tubarão";
+    const center = CITY_CENTERS[city] || CITY_CENTERS["Tubarão"];
+
+    map = L.map("map-container").setView([center.lat, center.lng], 13);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors",
+    }).addTo(map);
+
+    markersGroup = L.markerClusterGroup({
+      chunkedLoading: true,
+      maxClusterRadius: 40,
+    });
+    map.addLayer(markersGroup);
+  }
+  setTimeout(() => map.invalidateSize(), 100);
+}
+
+function prepareGeocodingData() {
+  if (markersGroup) markersGroup.clearLayers();
+  geocodeQueue = [];
+  isGeocoding = false;
+
+  allData.forEach((p) => {
+    if (!p.city) return;
+
+    let addressQuery = "";
+    if (p.street) {
+      const ruaLimpa = p.street.replace(/,\s*\d+.*$/, "").trim();
+      addressQuery = `${ruaLimpa}, ${p.neighborhood || ""}, ${
+        p.city
+      }, SC, Brasil`;
+    } else if (p.neighborhood) {
+      addressQuery = `${p.neighborhood}, ${p.city}, SC, Brasil`;
+    } else {
+      addressQuery = `${p.city}, SC, Brasil`;
+    }
+
+    p._geocodeQuery = addressQuery
+      .replace(/,\s*,/g, ",")
+      .replace(/\s+/g, " ")
+      .trim();
+    p._fallbackQuery = p.neighborhood
+      ? `${p.neighborhood}, ${p.city}, SC, Brasil`
+      : `${p.city}, SC, Brasil`;
+    p._geocoded = false;
+  });
+}
+
+function startGeocoding() {
+  if (isGeocoding) return;
+
+  allData.forEach((p) => {
+    if (!p._geocoded && p._geocodeQuery && geocodeCache[p._geocodeQuery]) {
+      const cached = geocodeCache[p._geocodeQuery];
+      if (!cached.notFound) {
+        addMarkerToMap(p, cached.lat, cached.lon);
+      }
+      p._geocoded = true;
+    }
+  });
+
+  geocodeQueue = allData.filter((p) => !p._geocoded && p._geocodeQuery);
+
+  if (geocodeQueue.length > 0) {
+    isGeocoding = true;
+    processGeocodeQueue();
+  }
+}
+
+async function processGeocodeQueue() {
+  if (geocodeQueue.length === 0 || currentView !== "map") {
+    isGeocoding = false;
+    return;
+  }
+
+  const p = geocodeQueue.shift();
+
+  if (geocodeCache[p._geocodeQuery]) {
+    const cached = geocodeCache[p._geocodeQuery];
+    if (!cached.notFound) {
+      addMarkerToMap(p, cached.lat, cached.lon);
+    }
+    p._geocoded = true;
+    processGeocodeQueue();
+    return;
+  }
+
+  try {
+    let result = await fetchNominatim(p._geocodeQuery);
+
+    if (!result && p._fallbackQuery && p._fallbackQuery !== p._geocodeQuery) {
+      result = await fetchNominatim(p._fallbackQuery);
+    }
+
+    if (result) {
+      geocodeCache[p._geocodeQuery] = { lat: result.lat, lon: result.lon };
+      sessionStorage.setItem("geocodeCache", JSON.stringify(geocodeCache));
+      addMarkerToMap(p, result.lat, result.lon);
+    } else {
+      geocodeCache[p._geocodeQuery] = { notFound: true };
+      sessionStorage.setItem("geocodeCache", JSON.stringify(geocodeCache));
+    }
+    p._geocoded = true;
+  } catch (err) {
+    console.error("Geocoding failed for", p._geocodeQuery, err);
+  }
+
+  setTimeout(processGeocodeQueue, 1100);
+}
+
+async function fetchNominatim(query) {
+  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+    query,
+  )}&limit=1`;
+  const res = await fetch(url, { headers: { "Accept-Language": "pt-BR" } });
+  if (!res.ok) return null;
+  const data = await res.json();
+  if (data && data.length > 0) {
+    return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+  }
+  return null;
+}
+
+function addMarkerToMap(p, lat, lon) {
+  if (!markersGroup) return;
+
+  const priceStr = p.price
+    ? `R$ ${Number(p.price).toLocaleString("pt-BR")}`
+    : "Consulte";
+  const bedsStr = p.bedrooms ? `${p.bedrooms} quartos` : "";
+  const areaStr = p.area ? ` | ${p.area}m²` : "";
+  const imgStr = p.image_url
+    ? `<img src="${p.image_url}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 4px; margin-bottom: 8px;">`
+    : "";
+
+  const popupContent = `
+    <div style="width: 220px; font-family: 'DM Sans', sans-serif;">
+        ${imgStr}
+        <strong style="font-size: 0.9rem;">${p.title}</strong><br>
+        <span style="color: var(--green); font-weight: bold; font-size: 1rem;">${priceStr}</span><br>
+        <div style="font-size: 0.8rem; margin: 4px 0;">${bedsStr}${areaStr}</div>
+        <span style="font-size: 0.75rem; color: var(--ink-muted); display: inline-block; background: var(--bg); padding: 2px 6px; border-radius: 4px;">${p.agency}</span><br>
+        <a href="${p.url}" target="_blank" style="display: block; margin-top: 10px; color: var(--accent); text-decoration: none; font-weight: 500; font-size: 0.85rem;">Ver Imóvel →</a>
+    </div>
+  `;
+
+  const marker = L.marker([lat, lon]);
+  marker.bindPopup(popupContent);
+  markersGroup.addLayer(marker);
+}
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
   if (!lat1 || !lon1 || !lat2 || !lon2) return null;
@@ -222,6 +407,11 @@ async function fetchProperties() {
         allData.length === 1 ? "l" : "is"
       } encontrado${allData.length === 1 ? "" : "s"}`,
     );
+
+    prepareGeocodingData();
+    if (currentView === "map") {
+      startGeocoding();
+    }
   } catch (err) {
     console.error(err);
     errorArea.innerHTML = `
