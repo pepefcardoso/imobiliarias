@@ -31,6 +31,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+from cachetools import TTLCache
 
 from config.settings import settings
 from core.models import SearchQuery
@@ -110,7 +111,7 @@ SCRAPER_REGISTRY: dict[str, type[AgencyScraper]] = {
 
 class _AppState:
     aggregator: Optional[Aggregator] = None
-
+    cache: TTLCache = TTLCache(maxsize=500, ttl=900)
 
 _state = _AppState()
 
@@ -181,57 +182,17 @@ class PropertyResponse(BaseModel):
     "/properties",
     response_model=list[PropertyResponse],
     summary="List all aggregated property listings",
-    description=(
-        "Runs all registered scrapers, merges the results, and returns the "
-        "unified list. Optional query parameters narrow the results after aggregation."
-    ),
 )
 def get_properties(
-    city: Optional[str] = Query(
-        default=None,
-        description="Filter by city name (case-insensitive, partial match).",
-        examples=["Tubarão"],
-    ),
-    neighborhood: Optional[str] = Query(
-        default=None,
-        description="Filter by neighborhood name (case-insensitive, exact match).",
-        examples=["Centro"],
-    ),
-    min_price: Optional[float] = Query(
-        default=None,
-        ge=0,
-        description="Minimum listing price (inclusive).",
-    ),
-    max_price: Optional[float] = Query(
-        default=None,
-        ge=0,
-        description="Maximum listing price (inclusive). Default target: 320000.",
-    ),
-    min_bedrooms: Optional[int] = Query(
-        default=None,
-        ge=0,
-        description="Minimum number of bedrooms (inclusive).",
-    ),
-    min_bathrooms: Optional[int] = Query(
-        default=None,
-        ge=0,
-        description="Minimum number of bathrooms (inclusive).",
-    ),
-    min_parking: Optional[int] = Query(
-        default=None,
-        ge=0,
-        description="Minimum number of parking spots (inclusive).",
-    ),
-    min_area: Optional[float] = Query(
-        default=None,
-        ge=0,
-        description="Minimum area in m² (inclusive). Typical minimum: 50.",
-    ),
-    max_area: Optional[float] = Query(
-        default=None,
-        ge=0,
-        description="Maximum area in m² (inclusive).",
-    ),
+    city: Optional[str] = Query(default=None),
+    neighborhood: Optional[str] = Query(default=None),
+    min_price: Optional[float] = Query(default=None, ge=0),
+    max_price: Optional[float] = Query(default=None, ge=0),
+    min_bedrooms: Optional[int] = Query(default=None, ge=0),
+    min_bathrooms: Optional[int] = Query(default=None, ge=0),
+    min_parking: Optional[int] = Query(default=None, ge=0),
+    min_area: Optional[float] = Query(default=None, ge=0),
+    max_area: Optional[float] = Query(default=None, ge=0),
 ) -> list[PropertyResponse]:
     if _state.aggregator is None:
         raise HTTPException(status_code=503, detail="Aggregator not initialised.")
@@ -248,15 +209,28 @@ def get_properties(
         max_area=max_area
     )
 
+    cache_key = tuple(sorted(query.__dict__.items()))
+
+    cached_response = _state.cache.get(cache_key)
+    if cached_response is not None:
+        logger.info("[GET /properties] CACHE HIT for query=%s", query)
+        return cached_response
+
+    logger.info("[GET /properties] CACHE MISS for query=%s", query)
+    
     properties = _state.aggregator.search(query)
 
+    response_data = [PropertyResponse(**p.to_dict()) for p in properties]
+
+    _state.cache[cache_key] = response_data
+
     logger.info(
-        "[GET /properties] query=%s → %d result(s)",
+        "[GET /properties] query=%s → %d result(s) cached",
         query,
         len(properties),
     )
 
-    return [PropertyResponse(**p.to_dict()) for p in properties]
+    return response_data
 
 
 @app.get("/health", include_in_schema=False)

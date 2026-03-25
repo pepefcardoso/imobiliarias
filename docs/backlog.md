@@ -8,11 +8,11 @@ Descrição: Atualizar o endpoint /properties para armazenar em cache os resulta
 
 Critérios de Aceite:
 
-    [ ] O cache deve ser baseado no hash dos parâmetros da busca (SearchQuery).
+    [X] O cache deve ser baseado no hash dos parâmetros da busca (SearchQuery).
 
-    [ ] O Tempo de Vida (TTL) do cache deve ser de 15 a 30 minutos.
+    [X] O Tempo de Vida (TTL) do cache deve ser de 15 a 30 minutos.
 
-    [ ] Logs devem indicar claramente quando um resultado foi servido via "CACHE HIT" vs "CACHE MISS".
+    [X] Logs devem indicar claramente quando um resultado foi servido via "CACHE HIT" vs "CACHE MISS".
 
 Detalhes Técnicos:
 
