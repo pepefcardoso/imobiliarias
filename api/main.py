@@ -172,6 +172,7 @@ class PropertyResponse(BaseModel):
     bedrooms: Optional[int] = None
     bathrooms: Optional[int] = None
     parking: Optional[int] = None
+    condo_fee: Optional[float] = None
     neighborhood: Optional[str] = None
     city: Optional[str] = None
     image_url: Optional[str] = None

@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 
 from config.settings import AgencyConfig
 from core.models import Property, SearchQuery
-from core.parsing_utils import parse_area, parse_price, safe_int
+from core.parsing_utils import parse_area, parse_price, safe_int, parse_condo_fee
 from infrastructure.http_client import HttpClient
 from scrapers.base import AgencyScraper
 
@@ -136,6 +136,7 @@ class ImogestaoScraper(AgencyScraper):
                 bedrooms=bedrooms,
                 bathrooms=bathrooms,
                 parking=parking,
+                condo_fee=parse_condo_fee(None, card.get_text(separator=" ")),
                 neighborhood=neighborhood,
                 city=city,
                 image_url=image_url

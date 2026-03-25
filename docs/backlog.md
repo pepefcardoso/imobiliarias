@@ -48,11 +48,11 @@ Descrição: O valor do condomínio é um fator de decisão crítico que atualme
 
 Critérios de Aceite:
 
-    [ ] O backend deve extrair o valor do condomínio da API da imobiliária (quando disponível) ou do texto do anúncio.
+    [X] O backend deve extrair o valor do condomínio da API da imobiliária (quando disponível) ou do texto do anúncio.
 
-    [ ] O modelo Property e o JSON da API devem incluir o campo condo_fee (float).
+    [X] O modelo Property e o JSON da API devem incluir o campo condo_fee (float).
 
-    [ ] A UI (Tabela HTML) deve exibir uma nova coluna "Condomínio (R$)".
+    [X] A UI (Tabela HTML) deve exibir uma nova coluna "Condomínio (R$)".
 
 Detalhes Técnicos:
 

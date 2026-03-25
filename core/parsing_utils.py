@@ -187,3 +187,22 @@ def build_absolute_url(base_url: str, path: str) -> str:
         raise ValueError(f"Could not build a valid absolute URL from base='{base_url}' and path='{path}'")
 
     return result
+
+    def parse_condo_fee(raw: Optional[str | int | float], description: Optional[str] = None) -> Optional[float]:
+    """
+    Extrai o valor da taxa de condomínio (float) a partir de um valor bruto ou da descrição.
+    
+    1. Tenta usar o valor explícito (raw) usando o parse_price existente.
+    2. Se não existir, faz um fallback com Regex na descrição buscando por:
+       "Condomínio: R$ 350,00" ou "condominio R$350"
+    """
+    val = parse_price(raw)
+    if val is not None:
+        return val
+        
+    if description:
+        match = re.search(r"(?i)condom[íi]nio[:\s]*R?\$?\s*([\d\.,]+)", str(description))
+        if match:
+            return parse_price(match.group(1))
+            
+    return None

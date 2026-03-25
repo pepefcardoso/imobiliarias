@@ -248,20 +248,22 @@ function renderSkeleton() {
     .map(
       (_, i) => `
 <tr>
-<td><div class="skeleton-cell" style="width: 64px; height: 48px;"></div></td>
-<td class="title-cell">
-  <div class="skeleton-cell" style="width: 90%; margin-bottom: 6px;"></div>
-  <div class="skeleton-cell" style="width: 50%; height: 12px;"></div>
-</td>
-<td><div class="skeleton-cell" style="width: 70%;"></div></td>
-<td><div class="skeleton-cell" style="width: 60%;"></div></td>
-<td><div class="skeleton-cell" style="width: 40px;"></div></td>
-<td><div class="skeleton-cell" style="width: 40px;"></div></td>
-<td><div class="skeleton-cell" style="width: 40px;"></div></td>
-<td><div class="skeleton-cell" style="width: 80%;"></div></td>
-<td><div class="skeleton-cell" style="width: 70%;"></div></td>
-<td><div class="skeleton-cell" style="width: 60px; border-radius: 20px;"></div></td>
-<td><div class="skeleton-cell" style="width: 40px;"></div></td>
+  <td><div class="skeleton-cell" style="width: 64px; height: 48px;"></div></td>
+  <td class="title-cell">
+    <div class="skeleton-cell" style="width: 90%; margin-bottom: 6px;"></div>
+    <div class="skeleton-cell" style="width: 50%; height: 12px;"></div>
+  </td>
+  <td><div class="skeleton-cell" style="width: 70%;"></div></td>
+  <td><div class="skeleton-cell" style="width: 50%;"></div></td> <td><div class="skeleton-cell" style="width: 60%;"></div></td>
+  <td><div class="skeleton-cell" style="width: 40px;"></div></td>
+  <td><div class="skeleton-cell" style="width: 30px;"></div></td>
+  <td><div class="skeleton-cell" style="width: 30px;"></div></td>
+  <td><div class="skeleton-cell" style="width: 30px;"></div></td>
+  <td><div class="skeleton-cell" style="width: 50px;"></div></td>
+  <td><div class="skeleton-cell" style="width: 70%;"></div></td>
+  <td><div class="skeleton-cell" style="width: 70%;"></div></td>
+  <td><div class="skeleton-cell" style="width: 60px; border-radius: 20px;"></div></td>
+  <td><div class="skeleton-cell" style="width: 40px;"></div></td>
 </tr>
 `,
     )
@@ -276,6 +278,15 @@ function renderSkeleton() {
 </table>`;
 
   paginationEl.innerHTML = "";
+}
+
+function fmtCondoFee(v) {
+  if (v == null || v === 0) return '<span class="null-dash">—</span>';
+  return `<span style="color: var(--ink-muted); font-size: 0.85rem;">R$ ${Number(
+    v,
+  ).toLocaleString("pt-BR", {
+    maximumFractionDigits: 0,
+  })}</span>`;
 }
 
 function renderFilterSummary({
@@ -315,7 +326,16 @@ function renderFilterSummary({
 function sortData(data) {
   const d = [...data];
 
-  const numericKeys = ["price", "area", "bedrooms", "bathrooms", "parking"];
+  const numericKeys = [
+    "price",
+    "condo_fee",
+    "area",
+    "bedrooms",
+    "bathrooms",
+    "parking",
+    "distance",
+    "price_sqm",
+  ];
 
   d.sort((a, b) => {
     let av = a[sortKey];
@@ -375,6 +395,7 @@ const COLUMNS = [
   { key: "image_url", label: "Imagem", sortable: false },
   { key: "title", label: "Imóvel", sortable: false },
   { key: "price", label: "Preço", sortable: true },
+  { key: "condo_fee", label: "Condomínio", sortable: true },
   { key: "price_sqm", label: "R$/m²", sortable: true },
   { key: "area", label: "Área", sortable: true },
   { key: "bedrooms", label: "Quartos", sortable: true },
@@ -462,6 +483,7 @@ function renderTable() {
       <div class="listing-agency">${esc(p.agency)}</div>
     </td>
     <td>${fmtPrice(p.price)}</td>
+    <td>${fmtCondoFee(p.condo_fee)}</td> <td>${fmtPriceSqm(p.price_sqm)}</td>
     <td>${fmtPriceSqm(p.price_sqm)}</td> 
     <td>${fmtArea(p.area)}</td>
     <td>${fmtInt(p.bedrooms)}</td>

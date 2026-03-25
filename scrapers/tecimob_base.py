@@ -23,7 +23,7 @@ from typing import Any, Optional
 
 from config.settings import AgencyConfig
 from core.models import Property, SearchQuery
-from core.parsing_utils import parse_area, parse_price, safe_int
+from core.parsing_utils import parse_area, parse_price, safe_int, parse_condo_fee
 from infrastructure.http_client import HttpClient
 from scrapers.base import AgencyScraper
 
@@ -152,6 +152,9 @@ class TecimobScraper(AgencyScraper):
                 file_url_dict = images[0].get("file_url", {})
                 image_url = file_url_dict.get("medium") or file_url_dict.get("large")
 
+            condo_price_raw = raw.get("condo_price") or raw.get("condominium_price") or raw.get("condominium")
+            description = raw.get("description") or raw.get("description_formatted") or ""
+
             return Property(
                 agency=self.name,
                 title=(raw.get("title_formatted") or raw.get("meta_title") or "").strip(),
@@ -161,6 +164,7 @@ class TecimobScraper(AgencyScraper):
                 bedrooms=safe_int((rooms.get("bedroom") or {}).get("value")),
                 bathrooms=safe_int((rooms.get("bathroom") or {}).get("value")),
                 parking=safe_int((rooms.get("garage") or {}).get("value")),
+                condo_fee=parse_condo_fee(condo_price_raw, description),
                 neighborhood=neighborhood,
                 city=city,
                 image_url=image_url,
