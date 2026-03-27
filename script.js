@@ -444,12 +444,11 @@ function renderSkeleton() {
     <div class="skeleton-cell" style="width: 50%; height: 12px;"></div>
   </td>
   <td><div class="skeleton-cell" style="width: 70%;"></div></td>
-  <td><div class="skeleton-cell" style="width: 50%;"></div></td> <td><div class="skeleton-cell" style="width: 60%;"></div></td>
+  <td><div class="skeleton-cell" style="width: 60%;"></div></td>
   <td><div class="skeleton-cell" style="width: 40px;"></div></td>
   <td><div class="skeleton-cell" style="width: 30px;"></div></td>
   <td><div class="skeleton-cell" style="width: 30px;"></div></td>
   <td><div class="skeleton-cell" style="width: 30px;"></div></td>
-  <td><div class="skeleton-cell" style="width: 50px;"></div></td>
   <td><div class="skeleton-cell" style="width: 70%;"></div></td>
   <td><div class="skeleton-cell" style="width: 70%;"></div></td>
   <td><div class="skeleton-cell" style="width: 60px; border-radius: 20px;"></div></td>
@@ -585,13 +584,11 @@ const COLUMNS = [
   { key: "image_url", label: "Imagem", sortable: false },
   { key: "title", label: "Imóvel", sortable: false },
   { key: "price", label: "Preço", sortable: true },
-  { key: "condo_fee", label: "Condomínio", sortable: true },
   { key: "price_sqm", label: "R$/m²", sortable: true },
   { key: "area", label: "Área", sortable: true },
   { key: "bedrooms", label: "Quartos", sortable: true },
   { key: "bathrooms", label: "Banheiros", sortable: true },
   { key: "parking", label: "Vagas", sortable: true },
-  { key: "distance", label: "Dist. Centro", sortable: true },
   { key: "neighborhood", label: "Bairro", sortable: true },
   { key: "city", label: "Cidade", sortable: true },
   { key: "agency", label: "Imobiliária", sortable: true },
@@ -673,13 +670,11 @@ function renderTable() {
       <div class="listing-agency">${esc(p.agency)}</div>
     </td>
     <td>${fmtPrice(p.price)}</td>
-    <td>${fmtCondoFee(p.condo_fee)}</td> <td>${fmtPriceSqm(p.price_sqm)}</td>
     <td>${fmtPriceSqm(p.price_sqm)}</td> 
     <td>${fmtArea(p.area)}</td>
     <td>${fmtInt(p.bedrooms)}</td>
     <td>${fmtInt(p.bathrooms)}</td>
     <td>${fmtInt(p.parking)}</td>
-    <td>${fmtDistance(p.distance)}</td> 
     <td>${
       p.neighborhood
         ? `<span class="tag">${esc(p.neighborhood)}</span>`
@@ -689,8 +684,6 @@ function renderTable() {
     <td>${agencyHtml}</td>
     <td>${actionHtml}</td>
   </tr>`;
-    })
-    .join("");
 
   tableContainer.innerHTML = `
     <table>
