@@ -175,9 +175,7 @@ function prepareGeocodingData() {
     let addressQuery = "";
     if (p.street) {
       const ruaLimpa = p.street.replace(/,\s*\d+.*$/, "").trim();
-      addressQuery = `${ruaLimpa}, ${p.neighborhood || ""}, ${
-        p.city
-      }, SC, Brasil`;
+      addressQuery = `${ruaLimpa}, ${p.neighborhood || ""}, ${p.city}, SC, Brasil`;
     } else if (p.neighborhood) {
       addressQuery = `${p.neighborhood}, ${p.city}, SC, Brasil`;
     } else {
@@ -648,42 +646,40 @@ function renderTable() {
     }</th>`;
   }).join("");
 
-  const rows = pageData
-    .map((p, i) => {
-      const delay = i * 15 + "ms";
+  const rows = pageData.map((p, i) => {
+    const delay = i * 15 + "ms";
 
-      let agencyHtml = `<span class="badge">${esc(p.agency)}</span>`;
-      let actionHtml = `<a class="link" href="${esc(
-        p.url,
-      )}" target="_blank" rel="noopener">Ver →</a>`;
+    let agencyHtml = `<span class="badge">${esc(p.agency)}</span>`;
+    let actionHtml = `<a class="link" href="${esc(p.url)}" target="_blank" rel="noopener">Ver →</a>`;
 
-      if (p.source_links && p.source_links.length > 1) {
-        agencyHtml = `<span class="badge" style="background: var(--green); color: white; border: none;">Listado em ${p.source_links.length} imobiliárias</span>`;
-        const encodedLinks = encodeURIComponent(JSON.stringify(p.source_links));
-        actionHtml = `<button class="btn btn-ghost" style="height: 26px; padding: 0 10px; font-size: 0.75rem;" onclick="openSourcesModal('${encodedLinks}')">Ver links</button>`;
-      }
+    if (p.source_links && p.source_links.length > 1) {
+      agencyHtml = `<span class="badge" style="background: var(--green); color: white; border: none;">Listado em ${p.source_links.length} imobiliárias</span>`;
+      const encodedLinks = encodeURIComponent(JSON.stringify(p.source_links));
+      actionHtml = `<button class="btn btn-ghost" style="height: 26px; padding: 0 10px; font-size: 0.75rem;" onclick="openSourcesModal('${encodedLinks}')">Ver links</button>`;
+    }
 
-      return `<tr style="animation-delay:${delay}">
-    <td>${fmtImage(p.image_url)}</td> 
-    <td class="title-cell">
-      <div class="listing-title">${esc(p.title || "–")}</div>
-      <div class="listing-agency">${esc(p.agency)}</div>
-    </td>
-    <td>${fmtPrice(p.price)}</td>
-    <td>${fmtPriceSqm(p.price_sqm)}</td> 
-    <td>${fmtArea(p.area)}</td>
-    <td>${fmtInt(p.bedrooms)}</td>
-    <td>${fmtInt(p.bathrooms)}</td>
-    <td>${fmtInt(p.parking)}</td>
-    <td>${
-      p.neighborhood
-        ? `<span class="tag">${esc(p.neighborhood)}</span>`
-        : '<span class="null-dash">—</span>'
-    }</td>
-    <td>${p.city ? esc(p.city) : '<span class="null-dash">—</span>'}</td>
-    <td>${agencyHtml}</td>
-    <td>${actionHtml}</td>
-  </tr>`;
+    return `<tr style="animation-delay:${delay}">
+      <td>${fmtImage(p.image_url)}</td> 
+      <td class="title-cell">
+        <div class="listing-title">${esc(p.title || "–")}</div>
+        <div class="listing-agency">${esc(p.agency)}</div>
+      </td>
+      <td>${fmtPrice(p.price)}</td>
+      <td>${fmtPriceSqm(p.price_sqm)}</td> 
+      <td>${fmtArea(p.area)}</td>
+      <td>${fmtInt(p.bedrooms)}</td>
+      <td>${fmtInt(p.bathrooms)}</td>
+      <td>${fmtInt(p.parking)}</td>
+      <td>${
+        p.neighborhood
+          ? `<span class="tag">${esc(p.neighborhood)}</span>`
+          : '<span class="null-dash">—</span>'
+      }</td>
+      <td>${p.city ? esc(p.city) : '<span class="null-dash">—</span>'}</td>
+      <td>${agencyHtml}</td>
+      <td>${actionHtml}</td>
+    </tr>`;
+  }).join("");
 
   tableContainer.innerHTML = `
     <table>
