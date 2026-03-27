@@ -45,10 +45,11 @@ class Aggregator:
                     (p.city or "").lower() == (d.city or "").lower() and
                     (p.neighborhood or "").lower() == (d.neighborhood or "").lower() and
                     p.bedrooms == d.bedrooms and
-                    p.bathrooms == d.bathrooms
+                    p.bathrooms == d.bathrooms and
+                    p.parking == d.parking
                 ):
-                    if self._is_within_tolerance(p.price, d.price, 0.05) and \
-                       self._is_within_tolerance(p.area, d.area, 0.05):
+                    if (self._is_within_tolerance(p.price, d.price, 0.03) and 
+                        self._is_within_tolerance(p.area, d.area, 0.03)):
                         
                         d.source_links.append({"agency": p.agency, "url": p.url, "price": p.price})
                         is_duplicate = True
