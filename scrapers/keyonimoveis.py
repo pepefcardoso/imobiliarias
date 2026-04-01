@@ -1,6 +1,7 @@
 import logging
-import math
-from typing import Any
+import unicodedata
+from typing import Any, Optional
+from bs4 import BeautifulSoup
 
 from config.settings import AgencyConfig
 from core.models import Property, SearchQuery
@@ -10,71 +11,33 @@ from scrapers.base import AgencyScraper
 
 logger = logging.getLogger(__name__)
 
-BASE_URL = "https://www.keyonimoveis.com.br"
-API_ENDPOINT = f"{BASE_URL}/retornar-imoveis-disponiveis"
-PAGE_SIZE = 20
-
-CITY_CODE = 2
-CITY_NAME = "Tubarão"
-CITY_STATE = "SC"
-CITY_URL = "tubarao"
-CITY_STATE_URL = "sc"
-
-def _format_price(value: float | None) -> str | int:
-    """Formata um float (ex: 150000.0) para o padrão esperado pela API (ex: 150.000,00)"""
-    if not value:
-        return 0
-    return f"{value:_.2f}".replace(".", ",").replace("_", ".")
-
-def _format_rooms(value: int | None, suffix: str) -> str | int:
-    """Formata a string de cômodos (ex: 2 -> '2-quartos'). Se for 0 ou None, retorna 0."""
-    if not value:
-        return 0
-    return f"{value}-{suffix}"
+BASE_URL = "https://keyonimoveis.com.br"
 
 
 class KeyOnImoveisScraper(AgencyScraper):
     name = "keyonimoveis"
 
-    _HEADERS = {
-        "X-Requested-With": "XMLHttpRequest",
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "Referer": BASE_URL,
-        "Origin": BASE_URL,
-    }
-
-    def __init__(
-        self,
-        config: AgencyConfig | None = None,
-        client: HttpClient | None = None,
-    ) -> None:
-        super().__init__(config=config, client=client)
-        self.client._session.headers.update(self._HEADERS)
-
     def scrape(self, query: SearchQuery) -> list[Property]:
         properties: list[Property] = []
         page = 1
-        total_pages = 1
 
-        while page <= min(total_pages, self.max_pages):
-            logger.info("[%s] Fetching page %d/%d", self.name, page, total_pages)
-
-            data = self._fetch_page(page, query)
-            if data is None:
+        while page <= self.max_pages:
+            logger.info("[%s] Fetching page %d", self.name, page)
+            html = self._fetch_page(page, query)
+            
+            if not html:
                 break
 
-            if page == 1:
-                total = data.get("quantidade", 0)
-                total_pages = math.ceil(total / PAGE_SIZE) if total else 1
-                logger.info("[%s] %d listings across %d page(s)", self.name, total, total_pages)
+            soup = BeautifulSoup(html, "html.parser")
+            
+            cards = soup.find_all("a", class_="loop-property-archive")
 
-            listing_batch = data.get("lista", [])
-            if not listing_batch:
-                logger.info("[%s] Empty page %d — stopping.", self.name, page)
+            if not cards:
+                logger.info("[%s] No cards found on page %d — stopping.", self.name, page)
                 break
 
-            for raw in listing_batch:
-                prop = self._normalize(raw)
+            for card in cards:
+                prop = self._normalize(card)
                 if prop is not None:
                     properties.append(prop)
 
@@ -83,103 +46,95 @@ class KeyOnImoveisScraper(AgencyScraper):
         logger.info("[%s] Done. %d properties collected.", self.name, len(properties))
         return properties
 
-    def _fetch_page(self, page: int, query: SearchQuery) -> dict[str, Any] | None:
-        payload = self._build_payload(page, query)
+    def _fetch_page(self, page: int, query: SearchQuery) -> Optional[str]:
+        params: dict[str, Any] = {}
+
+        if query.city:
+            city_clean = ''.join(
+                c for c in unicodedata.normalize('NFD', query.city) 
+                if unicodedata.category(c) != 'Mn'
+            ).lower()
+            params["_property_location"] = city_clean.replace(" ", "-")
+
+        if query.min_price or query.max_price:
+            min_p = f"{query.min_price:.2f}" if query.min_price else "0.00"
+            max_p = f"{query.max_price:.2f}" if query.max_price else "999999999.00"
+            params["_property_price"] = f"{min_p},{max_p}"
+
+        if query.min_bedrooms:
+            params["_property_bedroom"] = f"{query.min_bedrooms}-999"
+
+        if query.min_bathrooms:
+            params["_property_bathroom"] = f"{query.min_bathrooms}-999"
+
+        if page > 1:
+            params["_paged"] = page
+
         try:
-            resp = self.client._session.post(
-                API_ENDPOINT,
-                data=payload,
-                timeout=self.config.timeout or 30,
-            )
-            resp.raise_for_status()
-            return resp.json()
+            return self.client.get(f"{BASE_URL}/comprar/", params=params)
         except Exception as exc:
             logger.error("[%s] Failed to fetch page %d: %s", self.name, page, exc)
-            raise
+            return None
 
-    def _build_payload(self, page: int, query: SearchQuery) -> dict[str, Any]:
-        return {
-            "finalidade": "venda",
-            "codigounidade": "",
-            "codigocondominio": 0,
-            "codigoproprietario": 0,
-            "codigocaptador": 0,
-            "codigosimovei": 0,
-            "codigocidade": CITY_CODE,
-            "codigoregiao": 0,
-            "bairros[0][cidade]": "",
-            "bairros[0][codigo]": "",
-            "bairros[0][estado]": "",
-            "bairros[0][estadoUrl]": "",
-            "bairros[0][nome]": "Todos",
-            "bairros[0][nomeUrl]": "todos-os-bairros",
-            "bairros[0][regiao]": "",
-            "endereco": "",
-            "edificio": "",
-            "numeroquartos": _format_rooms(query.min_bedrooms, "quartos"),
-            "numerovagas": _format_rooms(query.min_parking, "vagas"),
-            "numerobanhos": _format_rooms(query.min_bathrooms, "banheiros"),
-            "numerosuite": 0,
-            "numerovaranda": 0,
-            "numeroelevador": 0,
-            "valorde": _format_price(query.min_price),
-            "valorate": _format_price(query.max_price),
-            "areade": query.min_area or 0,
-            "areaate": query.max_area or 0,
-            "areaexternade": 0,
-            "areaexternaate": 0,
-            "extras": "",
-            "destaque": 0,
-            "opcaoimovel": 0,
-            "numeropagina": page,
-            "numeroregistros": PAGE_SIZE,
-            "ordenacao": "dataatualizacaodesc",
-            "cidades[codigo]": CITY_CODE,
-            "cidades[nome]": CITY_NAME,
-            "cidades[estado]": CITY_STATE,
-            "cidades[nomeUrl]": CITY_URL,
-            "cidades[estadoUrl]": CITY_STATE_URL,
-            "condominio[codigo]": 0,
-            "condominio[nome]": "",
-            "condominio[nomeUrl]": "todos-os-condominios",
-        }
-
-    def _normalize(self, raw: dict[str, Any]) -> Property | None:
+    def _normalize(self, card: BeautifulSoup) -> Optional[Property]:
         try:
-            codigo = raw.get("codigo")
-            url_amigavel = raw.get("url_amigavel", "")
-            url_publica: str = raw.get("urlpublica") or ""
-            
-            if not url_publica and url_amigavel and codigo:
-                url_publica = f"{BASE_URL}/imovel/{url_amigavel}/{codigo}"
-
-            if not url_publica:
-                logger.warning("[%s] Skipping listing %s — no URL", self.name, codigo)
+            url = card.get("href")
+            if not url:
                 return None
 
-            area_raw = raw.get("areaprincipal") or raw.get("areainterna")
+            img_tag = card.find("img")
+            image_url = None
+            if img_tag:
+                image_url = img_tag.get("data-src") or img_tag.get("src")
 
-            image_url = raw.get("urlfotoprincipalp")
+            texts = card.find_all("p")
+            title = texts[0].text.strip() if len(texts) > 0 else "Imóvel"
+            price_raw = texts[1].text.strip() if len(texts) > 1 else None
+            price = parse_price(price_raw)
+
+            neighborhood = None
+            city = None
+            title_parts = [p.strip() for p in title.split("-")]
+            if len(title_parts) >= 3:
+                city = title_parts[-2]
+                neighborhood = title_parts[-1]
+            elif len(title_parts) == 2:
+                city = title_parts[-1]
+
+            area = None
+            numeric_amenities = []
             
-            if not image_url:
-                fotos = raw.get("fotos", [])
-                if fotos and isinstance(fotos, list):
-                    image_url = fotos[0].get("urlp")
+            feature_divs = card.find_all("div", class_="flex items-center gap-1")
+            for f_div in feature_divs:
+                text_val = f_div.text.strip()
+                if not text_val:
+                    continue
+                    
+                if "m²" in text_val.lower() or "m2" in text_val.lower():
+                    area = parse_area(text_val)
+                else:
+                    val = safe_int(text_val)
+                    if val is not None:
+                        numeric_amenities.append(val)
+
+            bedrooms = numeric_amenities[0] if len(numeric_amenities) > 0 else None
+            bathrooms = numeric_amenities[1] if len(numeric_amenities) > 1 else None
+            parking = numeric_amenities[2] if len(numeric_amenities) > 2 else None
 
             return Property(
                 agency=self.name,
-                title=raw.get("titulo", "").strip(),
-                url=url_publica,
-                price=parse_price(raw.get("valor")),
-                area=parse_area(area_raw),
-                bedrooms=safe_int(raw.get("numeroquartos")),
-                bathrooms=safe_int(raw.get("numerobanhos")),
-                parking=safe_int(raw.get("numerovagas")),
-                neighborhood=raw.get("bairro") or None,
-                city=raw.get("cidade") or None,
-                image_url=image_url,
+                title=title,
+                url=url,
+                price=price,
+                area=area,
+                bedrooms=bedrooms,
+                bathrooms=bathrooms,
+                parking=parking,
+                neighborhood=neighborhood,
+                city=city,
+                image_url=image_url
             )
 
         except Exception as exc:
-            logger.warning("[%s] Failed to normalize listing %s: %s", self.name, raw.get("codigo"), exc)
+            logger.warning("[%s] Failed to normalize card: %s", self.name, exc)
             return None
