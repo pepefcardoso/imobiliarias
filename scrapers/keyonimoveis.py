@@ -22,7 +22,7 @@ class KeyOnImoveisScraper(AgencyScraper):
         page = 1
 
         while page <= self.max_pages:
-            logger.info("[%s] Fetching page %d", self.name, page)
+            logger.info("[%s] A procurar a página %d", self.name, page)
             html = self._fetch_page(page, query)
             
             if not html:
@@ -33,7 +33,7 @@ class KeyOnImoveisScraper(AgencyScraper):
             cards = soup.find_all("a", class_="loop-property-archive")
 
             if not cards:
-                logger.info("[%s] No cards found on page %d — stopping.", self.name, page)
+                logger.info("[%s] Nenhum imóvel encontrado na página %d — a parar.", self.name, page)
                 break
 
             for card in cards:
@@ -43,10 +43,13 @@ class KeyOnImoveisScraper(AgencyScraper):
 
             page += 1
 
-        logger.info("[%s] Done. %d properties collected.", self.name, len(properties))
+        logger.info("[%s] Concluído. %d imóveis recolhidos.", self.name, len(properties))
         return properties
 
     def _fetch_page(self, page: int, query: SearchQuery) -> Optional[str]:
+        """
+        Traduz o nosso SearchQuery genérico para os parâmetros do FacetWP usados pela KeyOn.
+        """
         params: dict[str, Any] = {}
 
         if query.city:
@@ -73,10 +76,13 @@ class KeyOnImoveisScraper(AgencyScraper):
         try:
             return self.client.get(f"{BASE_URL}/comprar/", params=params)
         except Exception as exc:
-            logger.error("[%s] Failed to fetch page %d: %s", self.name, page, exc)
+            logger.error("[%s] Falha ao aceder à página %d: %s", self.name, page, exc)
             return None
 
     def _normalize(self, card: BeautifulSoup) -> Optional[Property]:
+        """
+        Extrai os dados do HTML do card e converte num objeto Property estandardizado.
+        """
         try:
             url = card.get("href")
             if not url:
@@ -136,5 +142,5 @@ class KeyOnImoveisScraper(AgencyScraper):
             )
 
         except Exception as exc:
-            logger.warning("[%s] Failed to normalize card: %s", self.name, exc)
+            logger.warning("[%s] Falha a normalizar o card: %s", self.name, exc)
             return None
