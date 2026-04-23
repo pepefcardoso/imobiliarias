@@ -203,5 +203,11 @@ settings = Settings(
             use_browser=False,
             max_pages=10,
         ),
+        AgencyConfig(
+            name="radarimoveis",
+            url="https://imobiliariaradar.com.br",
+            use_browser=False,
+            max_pages=10,
+        ),
     ],
 )
