@@ -49,7 +49,6 @@ from scrapers.bilcomimoveis import BilcomImoveisScraper
 from scrapers.bitimoveis import BitImoveisScraper
 from scrapers.carlosmarques import CarlosMarquesScraper
 from scrapers.citymoveis import CityMoveisScraper
-from scrapers.conquistaimoveis import ConquistaImoveisScraper
 from scrapers.conquistalarimoveis import ConquistalarImoveisScraper
 from scrapers.correbens import CorrebensScraper
 from scrapers.dubettuimoveis import DubettuImoveisScraper
@@ -72,8 +71,8 @@ from scrapers.oppenheimimoveis import OppenheimImoveisScraper
 from scrapers.felixmarques import FelixMarquesScraper
 from scrapers.residesulimoveis import ResideSulImoveisScraper
 from scrapers.moradaimoveistb import MoradaImoveisTbScraper
-from scrapers.imobiliariaconquista import ImobiliariaConquistaScraper
 from scrapers.vendelar import VendelarScraper
+from scrapers.imobiliariaconquista import ImobiliariaConquistaScraper
 from scrapers.imobiliariatubarao import ImobiliariaTubaraoScraper
 
 SCRAPER_REGISTRY: dict[str, type[AgencyScraper]] = {
@@ -93,7 +92,6 @@ SCRAPER_REGISTRY: dict[str, type[AgencyScraper]] = {
     "litoralsulimoveis": LitoralSulImoveisScraper,
     "juliocorretor": JulioCorretorScraper,
     "imobicasa": ImobicasaScraper,
-    "conquistaimoveis": ConquistaImoveisScraper,
     "carlosmarques": CarlosMarquesScraper,
     "rfnegocios": RFNegociosScraper,
     "dubettuimoveis": DubettuImoveisScraper,
@@ -103,8 +101,8 @@ SCRAPER_REGISTRY: dict[str, type[AgencyScraper]] = {
     "oppenheimimoveis": OppenheimImoveisScraper,
     "felixmarques": FelixMarquesScraper,
     "residesulimoveis": ResideSulImoveisScraper,
-    "moradaimoveistb": MoradaImoveisTbScraper,
     "imobiliariaconquista": ImobiliariaConquistaScraper,
+    "moradaimoveistb": MoradaImoveisTbScraper,
     "vendelar": VendelarScraper,
     "imobiliariatubarao": ImobiliariaTubaraoScraper,
 }

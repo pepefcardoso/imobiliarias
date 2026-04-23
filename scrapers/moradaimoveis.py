@@ -1,7 +1,7 @@
 from scrapers.tecimob_base import TecimobScraper
 
 BASE_URL = "https://moradaimoveis.com.br"
-API_ENDPOINT = "https://api-sites2.gerenciarimoveis-cf.com.br/api/properties"
+API_ENDPOINT = "https://api-sites.gerenciarimoveis-cf.com.br/api/properties"
 
 class MoradaImoveisScraper(TecimobScraper):
     name = "moradaimoveis"

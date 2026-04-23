@@ -8,7 +8,7 @@ class RFNegociosScraper(TecimobScraper):
     BASE_URL = BASE_URL
     API_ENDPOINT = API_ENDPOINT
     _HEADERS = {
-        "x-domain": "rodneifrancaimoveis.com.br",
+        "x-domain": "www.rodneifrancaimoveis.com.br",
         "Accept": "application/json",
         "Referer": BASE_URL + "/",
         "Origin": BASE_URL,

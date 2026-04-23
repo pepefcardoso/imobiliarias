@@ -112,11 +112,12 @@ class TecimobScraper(AgencyScraper):
         }
         
         if query.min_bedrooms is not None:
-            params["filter[bedroom_gte]"] = query.min_bedrooms
+            params["filter[by_room_greater_equals][bedroom]"] = query.min_bedrooms
         if query.min_bathrooms is not None:
-            params["filter[bathroom_gte]"] = query.min_bathrooms
+            params["filter[by_room_greater_equals][bathroom]"] = query.min_bathrooms
         if query.min_parking is not None:
-            params["filter[garage_gte]"] = query.min_parking
+            params["filter[by_room_greater_equals][garage]"] = query.min_parking
+            
         if query.min_area is not None:
             params["filter[total_area_gte]"] = query.min_area
         if query.max_area is not None:

@@ -138,12 +138,6 @@ settings = Settings(
             max_pages=10,
         ),
         AgencyConfig(
-            name="conquistaimoveis",
-            url="https://conquistaimoveis.com.br",
-            use_browser=False,
-            max_pages=10,
-        ),
-        AgencyConfig(
             name="carlosmarques",
             url="https://carlosmarquescorretor.com.br",
             use_browser=False,
