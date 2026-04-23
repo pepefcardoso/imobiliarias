@@ -60,7 +60,6 @@ from scrapers.keyonimoveis import KeyOnImoveisScraper
 from scrapers.larroydimoveis import LarroyImoveisScraper
 from scrapers.litoralsulimoveis import LitoralSulImoveisScraper
 from scrapers.loteazul import LoteAzulScraper
-from scrapers.moradaimoveis import MoradaImoveisScraper
 from scrapers.pauloemayer import PauloEMayerScraper
 from scrapers.rfnegocios import RFNegociosScraper
 from scrapers.sittuarimoveis import SittuarImoveisScraper
@@ -87,7 +86,6 @@ SCRAPER_REGISTRY: dict[str, type[AgencyScraper]] = {
     "vendimoveis": VendimoveisScraper,
     "loteazul": LoteAzulScraper,
     "correbens": CorrebensScraper,
-    "moradaimoveis": MoradaImoveisScraper,
     "conquistalarimoveis": ConquistalarImoveisScraper,
     "litoralsulimoveis": LitoralSulImoveisScraper,
     "juliocorretor": JulioCorretorScraper,

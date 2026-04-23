@@ -96,12 +96,6 @@ settings = Settings(
             max_pages=10,
         ),
         AgencyConfig(
-            name="moradaimoveis",
-            url="https://moradaimoveis.com.br",
-            use_browser=False,
-            max_pages=10,
-        ),
-        AgencyConfig(
             name="conquistalarimoveis",
             url="https://conquistalarimoveis.com.br",
             use_browser=False,
