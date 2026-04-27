@@ -175,7 +175,9 @@ function prepareGeocodingData() {
     let addressQuery = "";
     if (p.street) {
       const ruaLimpa = p.street.replace(/,\s*\d+.*$/, "").trim();
-      addressQuery = `${ruaLimpa}, ${p.neighborhood || ""}, ${p.city}, SC, Brasil`;
+      addressQuery = `${ruaLimpa}, ${p.neighborhood || ""}, ${
+        p.city
+      }, SC, Brasil`;
     } else if (p.neighborhood) {
       addressQuery = `${p.neighborhood}, ${p.city}, SC, Brasil`;
     } else {
@@ -345,6 +347,11 @@ async function fetchProperties() {
   const maxPrice = document.getElementById("filter-max-price").value;
   const minArea = document.getElementById("filter-min-area").value;
   const maxArea = document.getElementById("filter-max-area").value;
+  const businessType = document.getElementById("filter-business").value;
+  const typesSelect = document.getElementById("filter-types");
+  const selectedTypes = Array.from(typesSelect.selectedOptions).map(
+    (opt) => opt.value,
+  );
 
   const params = new URLSearchParams();
   if (city) params.set("city", city);
@@ -356,6 +363,9 @@ async function fetchProperties() {
   if (maxPrice) params.set("max_price", maxPrice);
   if (minArea) params.set("min_area", minArea);
   if (maxArea) params.set("max_area", maxArea);
+
+  if (businessType) params.set("business_type", businessType);
+  selectedTypes.forEach((t) => params.append("property_types", t));
 
   setStatus('<span class="loading-dot"></span> Carregando…');
   errorArea.innerHTML = "";
@@ -591,6 +601,8 @@ const COLUMNS = [
   { key: "city", label: "Cidade", sortable: true },
   { key: "agency", label: "Imobiliária", sortable: true },
   { key: "_link", label: "Ver", sortable: false },
+  { key: "property_type", label: "Tipo", sortable: true },
+  { key: "business_type", label: "Negócio", sortable: true },
 ];
 
 function fmtPriceSqm(v) {
@@ -646,19 +658,22 @@ function renderTable() {
     }</th>`;
   }).join("");
 
-  const rows = pageData.map((p, i) => {
-    const delay = i * 15 + "ms";
+  const rows = pageData
+    .map((p, i) => {
+      const delay = i * 15 + "ms";
 
-    let agencyHtml = `<span class="badge">${esc(p.agency)}</span>`;
-    let actionHtml = `<a class="link" href="${esc(p.url)}" target="_blank" rel="noopener">Ver →</a>`;
+      let agencyHtml = `<span class="badge">${esc(p.agency)}</span>`;
+      let actionHtml = `<a class="link" href="${esc(
+        p.url,
+      )}" target="_blank" rel="noopener">Ver →</a>`;
 
-    if (p.source_links && p.source_links.length > 1) {
-      agencyHtml = `<span class="badge" style="background: var(--green); color: white; border: none;">Listado em ${p.source_links.length} imobiliárias</span>`;
-      const encodedLinks = encodeURIComponent(JSON.stringify(p.source_links));
-      actionHtml = `<button class="btn btn-ghost" style="height: 26px; padding: 0 10px; font-size: 0.75rem;" onclick="openSourcesModal('${encodedLinks}')">Ver links</button>`;
-    }
+      if (p.source_links && p.source_links.length > 1) {
+        agencyHtml = `<span class="badge" style="background: var(--green); color: white; border: none;">Listado em ${p.source_links.length} imobiliárias</span>`;
+        const encodedLinks = encodeURIComponent(JSON.stringify(p.source_links));
+        actionHtml = `<button class="btn btn-ghost" style="height: 26px; padding: 0 10px; font-size: 0.75rem;" onclick="openSourcesModal('${encodedLinks}')">Ver links</button>`;
+      }
 
-    return `<tr style="animation-delay:${delay}">
+      return `<tr style="animation-delay:${delay}">
       <td>${fmtImage(p.image_url)}</td> 
       <td class="title-cell">
         <div class="listing-title">${esc(p.title || "–")}</div>
@@ -679,7 +694,8 @@ function renderTable() {
       <td>${agencyHtml}</td>
       <td>${actionHtml}</td>
     </tr>`;
-  }).join("");
+    })
+    .join("");
 
   tableContainer.innerHTML = `
     <table>

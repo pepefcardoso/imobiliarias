@@ -18,6 +18,8 @@ class Property:
     image_url: Optional[str] = field(default=None)
     latitude: Optional[float] = field(default=None)
     longitude: Optional[float] = field(default=None)
+    property_type: Optional[str] = field(default=None)
+    business_type: Optional[str] = field(default=None)
     source_links: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict:
@@ -37,6 +39,8 @@ class Property:
             "image_url": self.image_url,
             "latitude": self.latitude,
             "longitude": self.longitude,
+            "property_type": self.property_type,
+            "business_type": self.business_type,
             "source_links": self.source_links,
         }
 
@@ -51,3 +55,5 @@ class SearchQuery:
     min_parking: Optional[int] = field(default=None)
     min_area: Optional[float] = field(default=None)
     max_area: Optional[float] = field(default=None)
+    property_types: Optional[list[str]] = field(default_factory=list)
+    business_type: Optional[str] = field(default="venda")

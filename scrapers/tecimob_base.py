@@ -18,7 +18,6 @@ at the API request level so unnecessary listings are never downloaded.
 """
 
 import logging
-from abc import abstractmethod
 from typing import Any, Optional
 
 from config.settings import AgencyConfig
@@ -58,7 +57,8 @@ class TecimobScraper(AgencyScraper):
 
         while page <= min(total_pages, self.max_pages):
             offset = (page - 1) * PAGE_SIZE + 1
-            logger.info("[%s] Fetching page %d/%d (offset=%d)", self.name, page, total_pages, offset)
+            logger.info("[%s] Fetching page %d/%d (offset=%d)", self.name,
+                        page, total_pages, offset)
 
             data = self._fetch_page(offset, query)
             if not data:
@@ -68,7 +68,8 @@ class TecimobScraper(AgencyScraper):
                 pagination = data.get("meta", {}).get("pagination", {})
                 total_pages = pagination.get("total_pages", 1)
                 total = pagination.get("total", 0)
-                logger.info("[%s] %d listings across %d page(s)", self.name, total, total_pages)
+                logger.info("[%s] %d listings across %d page(s)", self.name,
+                            total, total_pages)
 
             listings = data.get("data", [])
             if not listings:
@@ -76,16 +77,18 @@ class TecimobScraper(AgencyScraper):
                 break
 
             for raw in listings:
-                prop = self._normalize(raw)
+                prop = self._normalize(raw, query)
                 if prop is not None:
                     properties.append(prop)
 
             page += 1
 
-        logger.info("[%s] Done. %d properties collected.", self.name, len(properties))
+        logger.info("[%s] Done. %d properties collected.", self.name,
+                    len(properties))
         return properties
 
-    def _fetch_page(self, offset: int, query: SearchQuery) -> dict[str, Any] | None:
+    def _fetch_page(self, offset: int,
+                    query: SearchQuery) -> dict[str, Any] | None:
         params = self._build_params(offset, query)
         try:
             resp = self.client._session.get(
@@ -96,7 +99,8 @@ class TecimobScraper(AgencyScraper):
             resp.raise_for_status()
             return resp.json()
         except Exception as exc:
-            logger.error("[%s] Failed to fetch offset=%d: %s", self.name, offset, exc)
+            logger.error("[%s] Failed to fetch offset=%d: %s", self.name,
+                         offset, exc)
             return None
 
     def _build_params(self, offset: int, query: SearchQuery) -> dict[str, Any]:
@@ -106,32 +110,49 @@ class TecimobScraper(AgencyScraper):
             "offset": offset,
             "limit": PAGE_SIZE,
             "with_grouped_condos": "true",
-            "filter[transaction]": 1,
             "include": "subtype.type,user",
             "with_title": "true",
         }
-        
+
+        if query.business_type and query.business_type.lower() == "aluguel":
+            params["filter[transaction]"] = 2
+            if query.min_price is not None:
+                params["filter[by_higher_than_price]"] = query.min_price
+            if query.max_price is not None:
+                params["filter[by_lower_than_price]"] = query.max_price
+        else:
+            params["filter[transaction]"] = 1
+            if query.min_price is not None:
+                params["filter[price_gte]"] = query.min_price
+            if query.max_price is not None:
+                params["filter[price_lte]"] = query.max_price
+
+        if query.property_types:
+            params["filter[by_type_slug][]"] = [
+                pt.lower() for pt in query.property_types
+            ]
+
         if query.min_bedrooms is not None:
-            params["filter[by_room_greater_equals][bedroom]"] = query.min_bedrooms
+            params[
+                "filter[by_room_greater_equals][bedroom]"] = query.min_bedrooms
         if query.min_bathrooms is not None:
-            params["filter[by_room_greater_equals][bathroom]"] = query.min_bathrooms
+            params[
+                "filter[by_room_greater_equals][bathroom]"] = query.min_bathrooms
         if query.min_parking is not None:
-            params["filter[by_room_greater_equals][garage]"] = query.min_parking
-            
+            params[
+                "filter[by_room_greater_equals][garage]"] = query.min_parking
+
         if query.min_area is not None:
             params["filter[total_area_gte]"] = query.min_area
         if query.max_area is not None:
             params["filter[total_area_lte]"] = query.max_area
-        if query.min_price is not None:
-            params["filter[price_gte]"] = query.min_price
-        if query.max_price is not None:
-            params["filter[price_lte]"] = query.max_price
 
         if self.use_city_slug_filter:
             params["filter[by_neighborhood_or_city_slug]"] = self.city_slug
         return params
 
-    def _normalize(self, raw: dict[str, Any]) -> Property | None:
+    def _normalize(self, raw: dict[str, Any],
+                   query: SearchQuery) -> Property | None:
         try:
             slug = raw.get("url")
             if not slug:
@@ -140,12 +161,14 @@ class TecimobScraper(AgencyScraper):
             areas = raw.get("areas")
             if not isinstance(areas, dict):
                 areas = {}
-            area_block = areas.get("total_area") or areas.get("primary_area") or {}
+            area_block = areas.get("total_area") or areas.get(
+                "primary_area") or {}
 
             address_block = raw.get("address") or {}
             address_fmt: str = address_block.get("formatted", "")
             neighborhood, city = _split_address(address_fmt)
-            street = address_block.get("street") or address_block.get("name") or None
+            street = address_block.get("street") or address_block.get(
+                "name") or None
 
             rooms: dict = raw.get("rooms") or {}
 
@@ -153,16 +176,35 @@ class TecimobScraper(AgencyScraper):
             image_url = None
             if images:
                 file_url_dict = images[0].get("file_url", {})
-                image_url = file_url_dict.get("medium") or file_url_dict.get("large")
+                image_url = file_url_dict.get("medium") or file_url_dict.get(
+                    "large")
 
-            condo_price_raw = raw.get("condo_price") or raw.get("condominium_price") or raw.get("condominium")
-            description = raw.get("description") or raw.get("description_formatted") or ""
+            condo_price_raw = raw.get("condo_price") or raw.get(
+                "condominium_price") or raw.get("condominium")
+            description = raw.get("description") or raw.get(
+                "description_formatted") or ""
+
+            subtype_block = raw.get("subtype") or {}
+            type_block = subtype_block.get("type") or {}
+            property_type = type_block.get("name") or raw.get(
+                "property_type") or "Desconhecido"
+
+            target_business_type = "aluguel" if query.business_type and query.business_type.lower(
+            ) == "aluguel" else "venda"
+
+            if target_business_type == "aluguel" and raw.get("rent_price"):
+                raw_price = raw.get("rent_price")
+                business_type = "aluguel"
+            else:
+                raw_price = raw.get("price") or raw.get("total_price")
+                business_type = "venda"
 
             return Property(
                 agency=self.name,
-                title=(raw.get("title_formatted") or raw.get("meta_title") or "").strip(),
+                title=(raw.get("title_formatted") or raw.get("meta_title")
+                       or "").strip(),
                 url=f"{self.BASE_URL}/{self.url_prefix}/{slug}",
-                price=parse_price(raw.get("price") or raw.get("total_price")),
+                price=parse_price(raw_price),
                 area=parse_area(area_block.get("value")),
                 bedrooms=safe_int((rooms.get("bedroom") or {}).get("value")),
                 bathrooms=safe_int((rooms.get("bathroom") or {}).get("value")),
@@ -172,10 +214,14 @@ class TecimobScraper(AgencyScraper):
                 neighborhood=neighborhood,
                 city=city,
                 image_url=image_url,
+                property_type=property_type,
+                business_type=business_type,
             )
         except Exception as exc:
-            logger.warning("[%s] Failed to normalize listing %s: %s", self.name, raw.get("id"), exc)
+            logger.warning("[%s] Failed to normalize listing %s: %s",
+                           self.name, raw.get("id"), exc)
             return None
+
 
 def _split_address(formatted: str) -> tuple[str | None, str | None]:
     if not formatted:

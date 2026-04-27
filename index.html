@@ -39,6 +39,31 @@
     <div class="controls" id="controls">
       <div class="controls-section">
         <div class="control-group">
+          <label>Negócio</label>
+          <select id="filter-business" style="min-width: 110px">
+            <option value="venda" selected>Venda</option>
+            <option value="aluguel">Aluguel</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Tipo (Segure CTRL para vários)</label>
+          <select
+            id="filter-types"
+            multiple
+            style="height: 60px; min-width: 140px; padding: 4px"
+          >
+            <option value="apartamento" selected>Apartamento</option>
+            <option value="casa">Casa</option>
+            <option value="terreno">Terreno</option>
+            <option value="loft">Loft / Studio</option>
+            <option value="comercial">Sala Comercial</option>
+          </select>
+        </div>
+      </div>
+      <div class="controls-divider"></div>
+
+      <div class="controls-section">
+        <div class="control-group">
           <label>Cidade</label>
           <select id="filter-city" style="min-width: 140px">
             <option value="">Todas as Cidades</option>

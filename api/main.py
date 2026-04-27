@@ -177,6 +177,8 @@ class PropertyResponse(BaseModel):
     image_url: Optional[str] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+    property_type: Optional[str] = None
+    business_type: Optional[str] = None
     source_links: list[dict] = []
 
 @app.get(
@@ -194,6 +196,8 @@ def get_properties(
     min_parking: Optional[int] = Query(default=None, ge=0),
     min_area: Optional[float] = Query(default=None, ge=0),
     max_area: Optional[float] = Query(default=None, ge=0),
+    property_types: list[str] = Query(default=[]),
+    business_type: Optional[str] = Query(default="venda"),
 ) -> list[PropertyResponse]:
     if _state.aggregator is None:
         raise HTTPException(status_code=503, detail="Aggregator not initialised.")
@@ -207,7 +211,9 @@ def get_properties(
         min_bathrooms=min_bathrooms,
         min_parking=min_parking,
         min_area=min_area,
-        max_area=max_area
+        max_area=max_area,
+        property_types=property_types if property_types else None,
+        business_type=business_type
     )
 
     cache_key = tuple(sorted(query.__dict__.items()))

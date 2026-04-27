@@ -46,7 +46,9 @@ class Aggregator:
                     (p.neighborhood or "").lower() == (d.neighborhood or "").lower() and
                     p.bedrooms == d.bedrooms and
                     p.bathrooms == d.bathrooms and
-                    p.parking == d.parking
+                    p.parking == d.parking and
+                    (p.business_type or "").lower() == (d.business_type or "").lower() and
+                    (p.property_type or "").lower() == (d.property_type or "").lower()
                 ):
                     if (self._is_within_tolerance(p.price, d.price, 0.03) and 
                         self._is_within_tolerance(p.area, d.area, 0.03)):
@@ -191,6 +193,15 @@ class Aggregator:
 
             if query.neighborhood:
                 if not p.neighborhood or query.neighborhood.lower() != p.neighborhood.lower():
+                    continue
+
+            if query.business_type and p.business_type:
+                if query.business_type.lower() != p.business_type.lower():
+                    continue
+            
+            if query.property_types and p.property_type:
+                matches = any(pt.lower() in p.property_type.lower() for pt in query.property_types)
+                if not matches:
                     continue
                     
             filtered.append(p)
