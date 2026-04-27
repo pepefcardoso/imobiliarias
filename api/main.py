@@ -216,7 +216,10 @@ def get_properties(
         business_type=business_type
     )
 
-    cache_key = tuple(sorted(query.__dict__.items()))
+    cache_key = tuple(
+        (k, tuple(v) if isinstance(v, list) else v)
+        for k, v in sorted(query.__dict__.items())
+    )
 
     cached_response = _state.cache.get(cache_key)
     if cached_response is not None:
