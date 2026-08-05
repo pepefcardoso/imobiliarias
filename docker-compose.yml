@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  imobiliarias:
+    build: .
+    container_name: imobiliarias-api
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    networks:
+      - traefik-public
+    env_file:
+      - .env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.imobiliarias.rule=Host(`imobiliarias.pepefcardoso.dev`)"
+      - "traefik.http.routers.imobiliarias.entrypoints=websecure"
+      - "traefik.http.routers.imobiliarias.tls.certresolver=letsencrypt" 
+      - "traefik.http.services.imobiliarias.loadbalancer.server.port=8000"
+
+networks:
+  traefik-public:
+    external: true
