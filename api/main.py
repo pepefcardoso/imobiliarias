@@ -261,7 +261,7 @@ def serve_js():
 @app.get("/", include_in_schema=False)
 def serve_frontend():
     """
-    Quando alguém aceder ao URL principal (https://imobiliarias.onrender.com/),
+    Quando alguém aceder ao URL principal (https://imobiliarias.pepefcardoso.dev/),
     o servidor envia o ficheiro index.html.
     """
     return FileResponse("index.html")

@@ -1,5 +1,6 @@
 import logging
 import time
+import unicodedata
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed, TimeoutError
 from typing import Optional
 
@@ -160,6 +161,12 @@ class Aggregator:
                 exc_info=True,
             )
             return []
+    
+    def _normalize(s: str) -> str:
+    return "".join(
+        c for c in unicodedata.normalize("NFD", s.lower())
+        if unicodedata.category(c) != "Mn"
+    )
 
     def _apply_strict_filters(self, properties: list[Property], query: SearchQuery) -> list[Property]:
         """
@@ -188,11 +195,11 @@ class Aggregator:
                 continue
                 
             if query.city:
-                if not p.city or query.city.lower() not in p.city.lower():
+                if not p.city or _normalize(query.city) not in _normalize(p.city):
                     continue
 
             if query.neighborhood:
-                if not p.neighborhood or query.neighborhood.lower() != p.neighborhood.lower():
+                if not p.neighborhood or _normalize(query.neighborhood) != _normalize(p.neighborhood):
                     continue
 
             if query.business_type and p.business_type:
