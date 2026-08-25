@@ -23,10 +23,13 @@ logger = logging.getLogger(__name__)
 
 
 class BrowserClientError(Exception):
+    pass
 
 class BrowserTimeoutError(BrowserClientError):
+    pass
 
 class BrowserNavigationError(BrowserClientError):
+    pass
 
 class BrowserClient:
     """

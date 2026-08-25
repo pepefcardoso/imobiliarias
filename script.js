@@ -1,4 +1,4 @@
-const API_BASE = "https://imobiliarias.onrender.com";
+const API_BASE = "https://imobiliarias.pepefcardoso.dev";
 const PAGE_SIZE = 30;
 
 let allData = [];
