@@ -19,6 +19,10 @@ const errorArea = document.getElementById("error-area");
 const tableContainer = document.getElementById("table-container");
 const paginationEl = document.getElementById("pagination");
 const filterSummaryEl = document.getElementById("filter-summary");
+const typeSelectEl = document.getElementById("type-select");
+const typeSelectTrigger = document.getElementById("type-select-trigger");
+const typeSelectPanel = document.getElementById("type-select-panel");
+const typeSelectLabel = document.getElementById("type-select-label");
 
 const DICIONARIO_BAIRROS = {
   Tubarão: [
@@ -349,9 +353,7 @@ async function fetchProperties() {
   const maxArea = document.getElementById("filter-max-area").value;
   const businessType = document.getElementById("filter-business").value;
   const typesSelect = document.getElementById("filter-types");
-  const selectedTypes = Array.from(typesSelect.selectedOptions).map(
-    (opt) => opt.value,
-  );
+  const selectedTypes = getSelectedTypes();
 
   const params = new URLSearchParams();
   if (city) params.set("city", city);
@@ -520,6 +522,55 @@ function renderFilterSummary({
     pills.map((p) => `<span class="filter-pill">${p}</span>`).join("");
 }
 
+function getSelectedTypes() {
+  return Array.from(
+    typeSelectPanel.querySelectorAll('input[type="checkbox"]:checked'),
+  ).map((cb) => cb.value);
+}
+
+function updateTypeSelectLabel() {
+  const checked = typeSelectPanel.querySelectorAll(
+    'input[type="checkbox"]:checked',
+  );
+  if (checked.length === 0) typeSelectLabel.textContent = "Selecionar tipo";
+  else if (checked.length === 1)
+    typeSelectLabel.textContent = checked[0]
+      .closest("label")
+      .textContent.trim();
+  else typeSelectLabel.textContent = `${checked.length} tipos selecionados`;
+}
+
+typeSelectTrigger.addEventListener("click", (e) => {
+  e.stopPropagation();
+  typeSelectEl.classList.toggle("open");
+});
+
+typeSelectPanel.addEventListener("change", updateTypeSelectLabel);
+
+document.addEventListener("click", (e) => {
+  if (!typeSelectEl.contains(e.target)) typeSelectEl.classList.remove("open");
+});
+
+tableContainer.addEventListener("click", (e) => {
+  const sortTh = e.target.closest("th[data-sort-key]");
+  if (sortTh) return setSort(sortTh.dataset.sortKey);
+
+  const img = e.target.closest(".clickable-img");
+  if (img) return openModal(img.dataset.url);
+
+  const sourcesBtn = e.target.closest('[data-action="open-sources"]');
+  if (sourcesBtn) return openSourcesModal(sourcesBtn.dataset.links);
+
+  const clearBtn = e.target.closest('[data-action="clear-filters"]');
+  if (clearBtn) return document.getElementById("btn-clear").click();
+});
+
+paginationEl.addEventListener("click", (e) => {
+  const btn = e.target.closest(".page-btn[data-page]");
+  if (!btn || btn.disabled) return;
+  goPage(Number(btn.dataset.page));
+});
+
 function sortData(data) {
   const d = [...data];
 
@@ -623,9 +674,9 @@ function fmtImage(url) {
   }
   return `<img src="${esc(
     url,
-  )}" alt="Miniatura" loading="lazy" class="clickable-img" onclick="openModal('${esc(
+  )}" alt="Miniatura" loading="lazy" class="clickable-img" data-url="${esc(
     url,
-  )}')" style="width:64px;height:48px;object-fit:cover;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">`;
+  )}" style="width:64px;height:48px;object-fit:cover;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,0.1);cursor:pointer;">`;
 }
 
 function renderTable() {
@@ -642,7 +693,7 @@ function renderTable() {
         <div class="empty-icon">🏠</div>
         <div class="big">Nenhum imóvel encontrado</div>
         <p>Não encontrámos propriedades que correspondam aos teus critérios.</p>
-        <button class="btn btn-ghost" style="margin: 1.5rem auto 0;" onclick="document.getElementById('btn-clear').click()">Limpar Filtros</button>
+        <button class="btn btn-ghost" style="margin: 1.5rem auto 0;" data-action="clear-filters">Limpar Filtros</button>
       </div>`;
     paginationEl.innerHTML = "";
     return;
@@ -652,8 +703,8 @@ function renderTable() {
     let cls = col.sortable ? "sortable" : "";
     if (col.sortable && sortKey === col.key)
       cls += sortDir === "asc" ? " sort-asc" : " sort-desc";
-    const click = col.sortable ? `onclick="setSort('${col.key}')"` : "";
-    return `<th class="${cls}" ${click}>${col.label}${
+    const attr = col.sortable ? `data-sort-key="${col.key}"` : "";
+    return `<th class="${cls}" ${attr}>${col.label}${
       col.sortable ? '<span class="sort-icon"></span>' : ""
     }</th>`;
   }).join("");
@@ -670,7 +721,7 @@ function renderTable() {
       if (p.source_links && p.source_links.length > 1) {
         agencyHtml = `<span class="badge" style="background: var(--green); color: white; border: none;">Listado em ${p.source_links.length} imobiliárias</span>`;
         const encodedLinks = encodeURIComponent(JSON.stringify(p.source_links));
-        actionHtml = `<button class="btn btn-ghost" style="height: 26px; padding: 0 10px; font-size: 0.75rem;" onclick="openSourcesModal('${encodedLinks}')">Ver links</button>`;
+        actionHtml = `<button class="btn btn-ghost" style="height: 26px; padding: 0 10px; font-size: 0.75rem;" data-action="open-sources" data-links="${encodedLinks}">Ver links</button>`;
       }
 
       return `<tr style="animation-delay:${delay}">
@@ -713,7 +764,7 @@ function renderPagination(totalPages) {
   }
   let html = `<button class="page-btn" ${
     currentPage === 1 ? "disabled" : ""
-  } onclick="goPage(${currentPage - 1})">‹</button>`;
+  } data-page="${currentPage - 1}">‹</button>`;
   const range = [];
   for (let i = 1; i <= totalPages; i++) {
     if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 2)
@@ -726,11 +777,11 @@ function renderPagination(totalPages) {
     else
       html += `<button class="page-btn ${
         p === currentPage ? "active" : ""
-      }" onclick="goPage(${p})">${p}</button>`;
+      }" data-page="${p}">${p}</button>`;
   });
   html += `<button class="page-btn" ${
     currentPage === totalPages ? "disabled" : ""
-  } onclick="goPage(${currentPage + 1})">›</button>`;
+  } data-page="${currentPage + 1}">›</button>`;
   paginationEl.innerHTML = html;
 }
 
@@ -830,6 +881,13 @@ function closeSourcesModal() {
   document.getElementById("sources-modal").style.display = "none";
 }
 
+document
+  .getElementById("image-modal-close")
+  .addEventListener("click", closeModal);
+document
+  .getElementById("sources-modal-close")
+  .addEventListener("click", closeSourcesModal);
+
 window.addEventListener("click", function (event) {
   const imgModal = document.getElementById("image-modal");
   const srcModal = document.getElementById("sources-modal");
@@ -855,6 +913,10 @@ function applyDefaults() {
   document.getElementById("filter-parking").value = DEFAULTS.parking;
   document.getElementById("filter-min-area").value = DEFAULTS.minArea;
   document.getElementById("filter-max-area").value = DEFAULTS.maxArea;
+  typeSelectPanel.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+    cb.checked = cb.value === "apartamento";
+  });
+  updateTypeSelectLabel();
 }
 
 document

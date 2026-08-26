@@ -130,7 +130,9 @@ header {
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s, transform 0.1s;
+  transition:
+    background 0.15s,
+    transform 0.1s;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -540,7 +542,9 @@ a.link:hover {
 
 .clickable-img {
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 .clickable-img:hover {
   transform: scale(1.05);
@@ -593,4 +597,91 @@ a.link:hover {
   .controls-divider {
     display: none;
   }
+}
+
+.type-select {
+  position: relative;
+}
+
+.type-select-trigger {
+  height: 38px;
+  min-width: 150px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.type-select-trigger:hover {
+  border-color: var(--ink-muted);
+}
+
+.type-select.open .type-select-trigger {
+  border-color: var(--accent);
+}
+
+.type-select-panel {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 190px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 0.4rem;
+  z-index: 20;
+}
+
+.type-select.open .type-select-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.type-select-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.45rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.type-select-option:hover {
+  background: var(--row-hover);
+}
+
+.type-select-option input {
+  accent-color: var(--accent);
+}
+
+.site-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.2rem 2.5rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+}
+
+.site-footer a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.site-footer a:hover {
+  text-decoration: underline;
 }

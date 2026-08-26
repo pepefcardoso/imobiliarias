@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
@@ -46,18 +46,48 @@
           </select>
         </div>
         <div class="control-group">
-          <label>Tipo (Segure CTRL para vários)</label>
-          <select
-            id="filter-types"
-            multiple
-            style="height: 60px; min-width: 140px; padding: 4px"
-          >
-            <option value="apartamento" selected>Apartamento</option>
-            <option value="casa">Casa</option>
-            <option value="terreno">Terreno</option>
-            <option value="loft">Loft / Studio</option>
-            <option value="comercial">Sala Comercial</option>
-          </select>
+          <label>Tipo</label>
+          <div class="type-select" id="type-select">
+            <button
+              type="button"
+              class="type-select-trigger"
+              id="type-select-trigger"
+            >
+              <span id="type-select-label">Apartamento</span>
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+              >
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </button>
+            <div class="type-select-panel" id="type-select-panel">
+              <label class="type-select-option"
+                ><input
+                  type="checkbox"
+                  value="apartamento"
+                  checked
+                />Apartamento</label
+              >
+              <label class="type-select-option"
+                ><input type="checkbox" value="casa" />Casa</label
+              >
+              <label class="type-select-option"
+                ><input type="checkbox" value="terreno" />Terreno</label
+              >
+              <label class="type-select-option"
+                ><input type="checkbox" value="loft" />Loft / Studio</label
+              >
+              <label class="type-select-option"
+                ><input type="checkbox" value="comercial" />Sala
+                Comercial</label
+              >
+            </div>
+          </div>
         </div>
       </div>
       <div class="controls-divider"></div>
@@ -207,6 +237,8 @@
       </div>
     </div>
 
+    <div id="error-area"></div>
+
     <div id="view-table-section">
       <div class="table-wrap">
         <div id="table-container"></div>
@@ -225,14 +257,13 @@
       </div>
     </div>
 
-    <div id="error-area"></div>
-    <div class="table-wrap">
-      <div id="table-container"></div>
-    </div>
-    <div class="pagination" id="pagination"></div>
-
     <div id="image-modal" class="modal">
-      <span class="modal-close" onclick="closeModal()">&times;</span>
+      <span
+        class="modal-close"
+        style="top: 15px; right: 20px; color: var(--ink)"
+        id="sources-modal-close"
+        >&times;</span
+      >
       <img class="modal-content" id="modal-img" />
     </div>
 
@@ -253,7 +284,12 @@
           onclick="closeSourcesModal()"
           >&times;</span
         >
-        <h3 style="margin-bottom: 1rem; font-family: 'Playfair Display', serif">
+        <h3
+          style="
+            margin-bottom: 1rem;
+            font-family: &quot;Playfair Display&quot;, serif;
+          "
+        >
           Anunciado em:
         </h3>
         <div
@@ -268,6 +304,17 @@
         ></div>
       </div>
     </div>
+
+    <footer class="site-footer">
+      <span>Imóveis Tubarão — Agregador de imóveis</span>
+      <a
+        href="https://portfolio.pepefcardoso.dev"
+        target="_blank"
+        rel="noopener"
+      >
+        Desenvolvido por Pedro Paulo
+      </a>
+    </footer>
 
     <script src="script.js"></script>
     <script
