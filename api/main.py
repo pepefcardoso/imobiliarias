@@ -1,27 +1,3 @@
-"""
-api/main.py
-
-FastAPI application — exposes aggregated property listings via a REST API.
-
-Responsibilities:
-  - Wire registered scrapers to the Aggregator on startup
-  - Expose GET /properties with optional query-param filters
-  - Return a unified JSON list of Property objects
-
-Rules (from architecture guidelines):
-  - No scraping logic here
-  - No parsing logic here
-  - Filtering is query-param driven — it is the API layer's responsibility
-    to narrow results before returning them to the caller
-
-Running locally:
-    uvicorn api.main:app --reload
-
-Endpoint:
-    GET https://imobiliarias.pepefcardoso.dev/properties
-    GET https://imobiliarias.pepefcardoso.dev/properties?city=Tubar%C3%A3o&max_price=320000&min_bedrooms=1&min_bathrooms=1&min_parking=1&min_area=50
-"""
-
 import logging
 import logging.config
 from contextlib import asynccontextmanager
@@ -40,7 +16,7 @@ from services.aggregator import Aggregator
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
+    format="%(asctime)s [%(levelname)s] %(name)s   %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger(__name__)
@@ -113,35 +89,32 @@ class _AppState:
 
 _state = _AppState()
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     config_by_name = {cfg.name: cfg for cfg in settings.agencies}
-
     scrapers: list[AgencyScraper] = []
     for name, scraper_cls in SCRAPER_REGISTRY.items():
         if name not in config_by_name:
             logger.warning(
-                "[startup] Scraper %r is registered but has no AgencyConfig in settings — skipping.",
+                "[startup] Scraper %r is registered but has no AgencyConfig in settings   skipping.",
                 name,
             )
             continue
         scrapers.append(scraper_cls(config=config_by_name[name]))
         logger.info("[startup] Registered scraper: %s", name)
-
+        
     _state.aggregator = Aggregator(
         scrapers=scrapers,
         concurrent=True,
         max_workers=settings.max_workers,
     )
+    
     logger.info(
         "[startup] Aggregator ready with %d scraper(s) (concurrent, max_workers=%d).",
         len(scrapers),
         settings.max_workers,
     )
-
     yield
-
     logger.info("[shutdown] Application shutting down.")
 
 app = FastAPI(
@@ -199,9 +172,10 @@ def get_properties(
     property_types: list[str] = Query(default=[]),
     business_type: Optional[str] = Query(default="venda"),
 ) -> list[PropertyResponse]:
+    
     if _state.aggregator is None:
         raise HTTPException(status_code=503, detail="Aggregator not initialised.")
-
+        
     query = SearchQuery(
         city=city,
         neighborhood=neighborhood,
@@ -215,33 +189,28 @@ def get_properties(
         property_types=property_types if property_types else None,
         business_type=business_type
     )
-
+    
     cache_key = tuple(
         (k, tuple(v) if isinstance(v, list) else v)
         for k, v in sorted(query.__dict__.items())
     )
-
+    
     cached_response = _state.cache.get(cache_key)
     if cached_response is not None:
         logger.info("[GET /properties] CACHE HIT for query=%s", query)
         return cached_response
-
+        
     logger.info("[GET /properties] CACHE MISS for query=%s", query)
-    
     properties = _state.aggregator.search(query)
-
     response_data = [PropertyResponse(**p.to_dict()) for p in properties]
-
+    
     _state.cache[cache_key] = response_data
-
     logger.info(
-        "[GET /properties] query=%s → %d result(s) cached",
+        "[GET /properties] query=%s   %d result(s) cached",
         query,
         len(properties),
     )
-
     return response_data
-
 
 @app.get("/health", include_in_schema=False)
 def health() -> dict:
@@ -250,18 +219,12 @@ def health() -> dict:
 
 @app.get("/style.css", include_in_schema=False)
 def serve_css():
-    """Serve o ficheiro de estilos CSS."""
     return FileResponse("style.css")
 
 @app.get("/script.js", include_in_schema=False)
 def serve_js():
-    """Serve o ficheiro de scripts JavaScript."""
     return FileResponse("script.js")
 
 @app.get("/", include_in_schema=False)
 def serve_frontend():
-    """
-    Quando alguém aceder ao URL principal (https://imobiliarias.pepefcardoso.dev/),
-    o servidor envia o ficheiro index.html.
-    """
     return FileResponse("index.html")

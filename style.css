@@ -142,9 +142,11 @@ header {
   background: var(--accent);
   color: #fff;
 }
+
 .btn-primary:hover {
   background: #a84215;
 }
+
 .btn-primary:active {
   transform: scale(0.98);
 }
@@ -154,6 +156,7 @@ header {
   border: 1px solid var(--border);
   color: var(--ink-muted);
 }
+
 .btn-ghost:hover {
   border-color: var(--ink-muted);
   color: var(--ink);
@@ -261,6 +264,7 @@ th {
 th.sortable {
   cursor: pointer;
 }
+
 th.sortable:hover {
   color: var(--ink);
 }
@@ -276,12 +280,14 @@ th.sort-asc .sort-icon::after {
   content: "▲";
   opacity: 1;
 }
+
 th.sort-desc .sort-icon::after {
   content: "▼";
   opacity: 1;
 }
+
 th:not(.sort-asc):not(.sort-desc) .sort-icon::after {
-  content: "⇅";
+  content: "↕";
 }
 
 tbody tr {
@@ -379,6 +385,7 @@ a.link {
   font-size: 0.78rem;
   font-weight: 500;
 }
+
 a.link:hover {
   text-decoration: underline;
 }
@@ -408,11 +415,13 @@ a.link:hover {
   border-color: var(--accent);
   color: var(--accent);
 }
+
 .page-btn.active {
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
 }
+
 .page-btn:disabled {
   opacity: 0.35;
   cursor: default;
@@ -460,11 +469,13 @@ a.link:hover {
   border-radius: 8px;
   margin: 2rem 0;
 }
+
 .empty-icon {
   font-size: 3.5rem;
   margin-bottom: 1rem;
   opacity: 0.6;
 }
+
 .empty-state .big {
   font-family: "Playfair Display", serif;
   font-size: 2.2rem;
@@ -487,6 +498,7 @@ a.link:hover {
   align-items: center;
   text-align: center;
 }
+
 .error-icon {
   font-size: 2rem;
   margin-bottom: 0.5rem;
@@ -546,6 +558,7 @@ a.link:hover {
     transform 0.2s ease,
     box-shadow 0.2s ease;
 }
+
 .clickable-img:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;

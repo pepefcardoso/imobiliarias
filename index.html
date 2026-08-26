@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Imóveis Tubarão — Agregador</title>
+    <title>Imóveis Tubarão - Agregador</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -23,7 +23,6 @@
       rel="stylesheet"
       href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"
     />
-
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -31,11 +30,10 @@
       <div>
         <div class="header-title">Imóveis <span>Tubarão</span></div>
         <div class="header-sub" style="margin-top: 6px">
-          Agregador de imóveis · SC
+          Agregador de imóveis
         </div>
       </div>
     </header>
-
     <div class="controls" id="controls">
       <div class="controls-section">
         <div class="control-group">
@@ -91,7 +89,6 @@
         </div>
       </div>
       <div class="controls-divider"></div>
-
       <div class="controls-section">
         <div class="control-group">
           <label>Cidade</label>
@@ -110,9 +107,7 @@
           </select>
         </div>
       </div>
-
       <div class="controls-divider"></div>
-
       <div class="controls-section">
         <div class="control-group">
           <label>Preço mín.</label>
@@ -134,9 +129,7 @@
           />
         </div>
       </div>
-
       <div class="controls-divider"></div>
-
       <div class="controls-section">
         <div class="control-group">
           <label>Quartos mín.</label>
@@ -166,9 +159,7 @@
           </select>
         </div>
       </div>
-
       <div class="controls-divider"></div>
-
       <div class="controls-section">
         <div class="control-group">
           <label>Área mín. (m²)</label>
@@ -190,7 +181,6 @@
           />
         </div>
       </div>
-
       <div class="controls-right">
         <button class="btn btn-ghost" id="btn-clear">Limpar</button>
         <button class="btn btn-primary" id="btn-search">
@@ -209,9 +199,7 @@
         </button>
       </div>
     </div>
-
     <div class="filter-summary" id="filter-summary" style="display: none"></div>
-
     <div class="status-bar" id="status-bar">
       <div>
         <span id="status-text">Clique em Buscar para carregar imóveis.</span>
@@ -236,16 +224,13 @@
         </button>
       </div>
     </div>
-
     <div id="error-area"></div>
-
     <div id="view-table-section">
       <div class="table-wrap">
         <div id="table-container"></div>
       </div>
       <div class="pagination" id="pagination"></div>
     </div>
-
     <div id="view-map-section" style="display: none; padding: 0 2.5rem 2rem">
       <div
         id="map-container"
@@ -256,17 +241,15 @@
         servidores do mapa.
       </div>
     </div>
-
     <div id="image-modal" class="modal">
       <span
         class="modal-close"
         style="top: 15px; right: 20px; color: var(--ink)"
-        id="sources-modal-close"
+        id="image-modal-close"
         >&times;</span
       >
       <img class="modal-content" id="modal-img" />
     </div>
-
     <div id="sources-modal" class="modal">
       <div
         class="modal-content"
@@ -281,7 +264,7 @@
         <span
           class="modal-close"
           style="top: 15px; right: 20px; color: var(--ink)"
-          onclick="closeSourcesModal()"
+          id="sources-modal-close"
           >&times;</span
         >
         <h3
@@ -304,18 +287,15 @@
         ></div>
       </div>
     </div>
-
     <footer class="site-footer">
-      <span>Imóveis Tubarão — Agregador de imóveis</span>
+      <span>Imóveis Tubarão - Agregador de imóveis</span>
       <a
         href="https://portfolio.pepefcardoso.dev"
         target="_blank"
         rel="noopener"
+        >Desenvolvido por Pedro Paulo</a
       >
-        Desenvolvido por Pedro Paulo
-      </a>
     </footer>
-
     <script src="script.js"></script>
     <script
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
