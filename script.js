@@ -52,7 +52,7 @@ const DICIONARIO_BAIRROS = {
     "São João (Margem Direita)",
     "São João (Margem Esquerda)",
     "São Martinho",
-    "Sertão dos Corrêas",
+    "Sertão dos Corrêa",
     "Vila Esperança",
     "Vila Moema",
   ],
@@ -565,8 +565,6 @@ const COLUMNS = [
   { key: "city", label: "Cidade", sortable: true },
   { key: "agency", label: "Imobiliária", sortable: true },
   { key: "_link", label: "Ver", sortable: false },
-  { key: "property_type", label: "Tipo", sortable: true },
-  { key: "business_type", label: "Negócio", sortable: true },
 ];
 
 function fmtPriceSqm(v) {
