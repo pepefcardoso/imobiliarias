@@ -7,7 +7,13 @@ services:
     restart: unless-stopped
     mem_limit: 1g
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8000/health"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')",
+        ]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -26,7 +32,7 @@ services:
       - "traefik.http.routers.imobiliarias.rule=Host(`imobiliarias.pepefcardoso.dev`)"
       - "traefik.http.routers.imobiliarias.entrypoints=websecure"
       - "traefik.http.routers.imobiliarias.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.imobiliarias.middlewares=security-headers@docker,imobiliarias-ratelimit"
+      - "traefik.http.routers.imobiliarias.middlewares=security-headers@file,imobiliarias-ratelimit"
       - "traefik.http.services.imobiliarias.loadbalancer.server.port=8000"
       - "traefik.http.middlewares.imobiliarias-ratelimit.ratelimit.average=50"
       - "traefik.http.middlewares.imobiliarias-ratelimit.ratelimit.burst=100"

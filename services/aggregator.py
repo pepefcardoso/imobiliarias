@@ -11,6 +11,13 @@ from scrapers.base import AgencyScraper
 logger = logging.getLogger(__name__)
 
 
+def _normalize(s: str) -> str:
+    return "".join(
+        c for c in unicodedata.normalize("NFD", s.lower())
+        if unicodedata.category(c) != "Mn"
+    )
+
+
 class Aggregator:
     def __init__(
         self,
@@ -28,9 +35,9 @@ class Aggregator:
             properties = self._collect_concurrent(query)
         else:
             properties = self._collect_sequential(query)
-            
+
         filtered = self._apply_strict_filters(properties, query)
-        
+
         return self._deduplicate_properties(filtered)
 
     def _deduplicate_properties(self, properties: list[Property]) -> list[Property]:
@@ -51,13 +58,13 @@ class Aggregator:
                     (p.business_type or "").lower() == (d.business_type or "").lower() and
                     (p.property_type or "").lower() == (d.property_type or "").lower()
                 ):
-                    if (self._is_within_tolerance(p.price, d.price, 0.03) and 
+                    if (self._is_within_tolerance(p.price, d.price, 0.03) and
                         self._is_within_tolerance(p.area, d.area, 0.03)):
-                        
+
                         d.source_links.append({"agency": p.agency, "url": p.url, "price": p.price})
                         is_duplicate = True
                         break
-            
+
             if not is_duplicate:
                 deduped.append(p)
 
@@ -78,7 +85,7 @@ class Aggregator:
             return True
         if val1 == 0 or val2 == 0:
             return False
-        
+
         return abs(val1 - val2) / max(val1, val2) <= tolerance
 
     def _collect_sequential(self, query: SearchQuery) -> list[Property]:
@@ -161,39 +168,33 @@ class Aggregator:
                 exc_info=True,
             )
             return []
-    
-    def _normalize(s: str) -> str:
-    return "".join(
-        c for c in unicodedata.normalize("NFD", s.lower())
-        if unicodedata.category(c) != "Mn"
-    )
 
     def _apply_strict_filters(self, properties: list[Property], query: SearchQuery) -> list[Property]:
         """
-        Safety Net: Valida programaticamente se os imóveis retornados pelos 
+        Safety Net: Valida programaticamente se os imóveis retornados pelos
         scrapers realmente cumprem as condições exigidas pelo utilizador.
         """
         filtered = []
         for p in properties:
             if query.min_bedrooms is not None and (p.bedrooms or 0) < query.min_bedrooms:
                 continue
-            
+
             if query.min_bathrooms is not None and (p.bathrooms or 0) < query.min_bathrooms:
                 continue
-                
+
             if query.min_parking is not None and (p.parking or 0) < query.min_parking:
                 continue
-                
+
             if query.min_price is not None and (p.price or 0.0) < query.min_price:
                 continue
             if query.max_price is not None and (p.price or float('inf')) > query.max_price:
                 continue
-                
+
             if query.min_area is not None and (p.area or 0.0) < query.min_area:
                 continue
             if query.max_area is not None and (p.area or float('inf')) > query.max_area:
                 continue
-                
+
             if query.city:
                 if not p.city or _normalize(query.city) not in _normalize(p.city):
                     continue
@@ -205,18 +206,19 @@ class Aggregator:
             if query.business_type and p.business_type:
                 if query.business_type.lower() != p.business_type.lower():
                     continue
-            
+
             if query.property_types and p.property_type:
                 matches = any(pt.lower() in p.property_type.lower() for pt in query.property_types)
                 if not matches:
                     continue
-                    
+
             filtered.append(p)
-            
+
         logger.info(
             "[aggregator] Safety Net filtering applied: %d in -> %d out",
             len(properties),
             len(filtered)
         )
-            
+
         return filtered
+        
