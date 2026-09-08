@@ -3,10 +3,12 @@
 tests/
 docs/
 README.md
-__pycache__/
-*.pyc
-*.pyo
+**pycache**/
+_.pyc
+_.pyo
 .venv/
 venv/
 .env
-*.log
+\*.log
+db.sqlite3
+staticfiles/

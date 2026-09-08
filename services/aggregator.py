@@ -5,7 +5,7 @@ from concurrent.futures import Future, ThreadPoolExecutor, as_completed, Timeout
 from typing import Optional
 
 from config.settings import settings
-from core.models import Property, SearchQuery
+from domain.models import Property, SearchQuery
 from scrapers.base import AgencyScraper
 
 logger = logging.getLogger(__name__)

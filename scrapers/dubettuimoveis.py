@@ -2,8 +2,8 @@ import logging
 from typing import Any
 
 from config.settings import AgencyConfig
-from core.models import Property, SearchQuery
-from core.parsing_utils import safe_float, safe_int
+from domain.models import Property, SearchQuery
+from domain.parsing_utils import safe_float, safe_int
 from infrastructure.http_client import HttpClient
 from scrapers.base import AgencyScraper
 

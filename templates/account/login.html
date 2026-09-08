@@ -1,0 +1,14 @@
+{% extends "base.html" %} {% block content %}
+<div class="max-w-sm mx-auto mt-16">
+  <h1 class="text-xl font-semibold mb-4">Entrar</h1>
+  <form method="post" action="{% url 'account_login' %}">
+    {% csrf_token %} {{ form.as_p }}
+    <button type="submit" class="w-full bg-black text-white rounded py-2">
+      Entrar
+    </button>
+  </form>
+  <a href="{% url 'account_signup' %}" class="block mt-3 text-sm text-gray-500"
+    >Criar conta</a
+  >
+</div>
+{% endblock %}

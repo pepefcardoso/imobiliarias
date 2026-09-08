@@ -3,11 +3,10 @@ import dataclasses
 import logging
 import time
 
-from api.main import SCRAPER_REGISTRY
+from apps.search.registry import SCRAPER_REGISTRY
 from config.settings import settings
-from core.models import SearchQuery
+from domain.models import SearchQuery
 
-# Reduzimos o nível de log padrão para evitar poluição visual durante o teste
 logging.getLogger("scrapers").setLevel(logging.WARNING)
 logging.getLogger("infrastructure").setLevel(logging.WARNING)
 

@@ -1,0 +1,210 @@
+<div x-data x-init="$store.search.loadFromJson()">
+  {{ properties_data|json_script:"properties-json" }}
+
+  <div class="status-bar" id="status-bar">
+    <div>
+      <span id="status-text" class="htmx-indicator">
+        {% if request.GET %}<b>{{ properties|length }}</b> imóvel{{
+        properties|length|pluralize:"is" }} encontrado{{
+        properties|length|pluralize:"s" }} {% else %}Clique em Buscar para
+        carregar imóveis.{% endif %}
+      </span>
+    </div>
+    <div class="view-toggle">
+      <button
+        class="btn btn-ghost"
+        :class="{ active: $store.search.view === 'table' }"
+        @click="$store.search.setView('table')"
+        style="height: 30px; font-size: 0.75rem"
+      >
+        Tabela
+      </button>
+      <button
+        class="btn btn-ghost"
+        :class="{ active: $store.search.view === 'map' }"
+        @click="$store.search.setView('map')"
+        style="height: 30px; font-size: 0.75rem"
+      >
+        Mapa
+      </button>
+    </div>
+  </div>
+
+  {% if pills %}
+  <div class="filter-summary" style="display: flex">
+    <span>Filtros ativos:</span>
+    {% for pill in pills %}<span class="filter-pill">{{ pill }}</span>{% endfor
+    %}
+  </div>
+  {% endif %}
+
+  <div id="view-table-section" x-show="$store.search.view === 'table'">
+    <div class="table-wrap">
+      <template x-if="$store.search.pageData.length === 0">
+        <div class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <div class="big">Nenhum imóvel encontrado</div>
+          <p>
+            Não encontramos propriedades que correspondam aos seus critérios.
+          </p>
+        </div>
+      </template>
+      <table x-show="$store.search.pageData.length > 0">
+        <thead>
+          <tr>
+            <th>Imagem</th>
+            <th>Imóvel</th>
+            <template
+              x-for="col in [['price','Preço'],['price_sqm','R$/m²'],['area','Área'],['bedrooms','Quartos'],['bathrooms','Banheiros'],['parking','Vagas'],['neighborhood','Bairro'],['city','Cidade'],['agency','Imobiliária']]"
+              :key="col[0]"
+            >
+              <th
+                class="sortable"
+                :class="{ 'sort-asc': $store.search.sortKey === col[0] && $store.search.sortDir === 'asc', 'sort-desc': $store.search.sortKey === col[0] && $store.search.sortDir === 'desc' }"
+                @click="$store.search.setSort(col[0])"
+              >
+                <span x-text="col[1]"></span><span class="sort-icon"></span>
+              </th>
+            </template>
+            <th>Ver</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="p in $store.search.pageData" :key="p.url">
+            <tr>
+              <td>
+                <img
+                  x-show="p.image_url"
+                  :src="p.image_url"
+                  alt="Miniatura"
+                  loading="lazy"
+                  class="clickable-img"
+                  style="
+                    width: 64px;
+                    height: 48px;
+                    object-fit: cover;
+                    border-radius: 4px;
+                    cursor: pointer;
+                  "
+                  @click="$store.search.openImage(p.image_url)"
+                />
+                <div
+                  x-show="!p.image_url"
+                  style="
+                    width: 64px;
+                    height: 48px;
+                    background: #e8e4dc;
+                    border-radius: 4px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #a89f93;
+                    font-size: 0.6rem;
+                    text-transform: uppercase;
+                  "
+                >
+                  Sem foto
+                </div>
+              </td>
+              <td class="title-cell">
+                <div class="listing-title" x-text="p.title || '-'"></div>
+                <div class="listing-agency" x-text="p.agency"></div>
+              </td>
+              <td x-html="$store.search.fmtPrice(p.price)"></td>
+              <td x-html="$store.search.fmtPriceSqm(p.price_sqm)"></td>
+              <td x-html="$store.search.fmtArea(p.area)"></td>
+              <td x-text="p.bedrooms ?? '-'"></td>
+              <td x-text="p.bathrooms ?? '-'"></td>
+              <td x-text="p.parking ?? '-'"></td>
+              <td>
+                <span
+                  x-show="p.neighborhood"
+                  class="tag"
+                  x-text="p.neighborhood"
+                ></span
+                ><span x-show="!p.neighborhood" class="null-dash">-</span>
+              </td>
+              <td x-text="p.city || '-'"></td>
+              <td>
+                <span
+                  x-show="!p.source_links || p.source_links.length <= 1"
+                  class="badge"
+                  x-text="p.agency"
+                ></span>
+                <span
+                  x-show="p.source_links && p.source_links.length > 1"
+                  class="badge"
+                  style="background: var(--green); color: #fff; border: none"
+                  x-text="'Listado em ' + (p.source_links?.length || 0) + ' imobiliárias'"
+                ></span>
+              </td>
+              <td>
+                <a
+                  x-show="!p.source_links || p.source_links.length <= 1"
+                  class="link"
+                  :href="p.url"
+                  target="_blank"
+                  rel="noopener"
+                  >Ver &rarr;</a
+                >
+                <button
+                  x-show="p.source_links && p.source_links.length > 1"
+                  class="btn btn-ghost"
+                  style="height: 26px; padding: 0 10px; font-size: 0.75rem"
+                  @click="$store.search.openSources(p.source_links)"
+                >
+                  Ver links
+                </button>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination" x-show="$store.search.totalPages > 1">
+      <button
+        class="page-btn"
+        :disabled="$store.search.page === 1"
+        @click="$store.search.goPage($store.search.page - 1)"
+      >
+        &larr;
+      </button>
+      <template x-for="p in $store.search.pageRange" :key="p">
+        <span
+          x-show="p === '...'"
+          style="padding: 0 4px; color: var(--ink-muted)"
+          >...</span
+        >
+        <button
+          x-show="p !== '...'"
+          class="page-btn"
+          :class="{ active: p === $store.search.page }"
+          @click="$store.search.goPage(p)"
+          x-text="p"
+        ></button>
+      </template>
+      <button
+        class="page-btn"
+        :disabled="$store.search.page === $store.search.totalPages"
+        @click="$store.search.goPage($store.search.page + 1)"
+      >
+        &rarr;
+      </button>
+    </div>
+  </div>
+
+  <div
+    id="view-map-section"
+    x-show="$store.search.view === 'map'"
+    style="padding: 0 2.5rem 2rem"
+  >
+    <div
+      id="map-container"
+      style="width: 100%; height: 65vh; border-radius: 8px; z-index: 1"
+    ></div>
+    <div style="font-size: 0.75rem; color: var(--ink-muted); margin-top: 8px">
+      * Os imóveis são localizados progressivamente para não sobrecarregar os
+      servidores do mapa.
+    </div>
+  </div>
+</div>

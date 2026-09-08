@@ -6,13 +6,18 @@ services:
     container_name: imobiliarias-api
     restart: unless-stopped
     mem_limit: 1g
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
     healthcheck:
       test:
         [
           "CMD",
           "python",
           "-c",
-          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/accounts/login/')",
         ]
       interval: 30s
       timeout: 5s
@@ -25,6 +30,7 @@ services:
         max-file: "3"
     networks:
       - traefik-public
+      - internal
     env_file:
       - .env
     labels:
@@ -37,6 +43,35 @@ services:
       - "traefik.http.middlewares.imobiliarias-ratelimit.ratelimit.average=50"
       - "traefik.http.middlewares.imobiliarias-ratelimit.ratelimit.burst=100"
 
+  postgres:
+    image: postgres:16-alpine
+    container_name: imobiliarias-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  redis:
+    image: redis:7-alpine
+    container_name: imobiliarias-redis
+    restart: unless-stopped
+    networks:
+      - internal
+
 networks:
   traefik-public:
     external: true
+  internal:
+
+volumes:
+  postgres-data:

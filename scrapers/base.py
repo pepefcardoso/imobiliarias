@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 from config.settings import AgencyConfig, settings
-from core.models import Property, SearchQuery
+from domain.models import Property, SearchQuery
 from infrastructure.http_client import HttpClient
 
 logger = logging.getLogger(__name__)

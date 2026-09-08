@@ -1,0 +1,39 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{% block title %}Imobiliárias{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <script
+      defer
+      src="https://unpkg.com/alpinejs@3.14.3/dist/cdn.min.js"
+    ></script>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    <style>
+      .htmx-indicator {
+        opacity: 0;
+      }
+      .htmx-request.htmx-indicator,
+      .htmx-request .htmx-indicator {
+        opacity: 1;
+      }
+    </style>
+    {% block extra_head %}{% endblock %}
+  </head>
+  <body class="bg-gray-50">
+    <nav class="flex justify-between items-center px-6 py-4 border-b">
+      <a href="/" class="font-semibold">Imobiliárias</a>
+      <div class="text-sm">
+        {% if user.is_authenticated %} {{ user.email }} ·
+        <a href="{% url 'account_logout' %}">Sair</a>
+        {% else %}
+        <a href="{% url 'account_login' %}">Entrar</a>
+        {% endif %}
+      </div>
+    </nav>
+    <main class="p-6">{% block content %}{% endblock %}</main>
+    {% block extra_scripts %}{% endblock %}
+  </body>
+</html>

@@ -1,0 +1,322 @@
+{% extends "base.html" %} {% block extra_head %}
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  crossorigin=""
+/>
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"
+/>
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"
+/>
+{% endblock %} {% block content %}
+<form
+  id="search-form"
+  hx-get="{% url 'search' %}"
+  hx-target="#results"
+  hx-swap="innerHTML"
+  hx-trigger="load, submit"
+  hx-push-url="true"
+  hx-indicator="#status-text"
+>
+  <div class="controls" id="controls">
+    <div class="controls-section">
+      <div class="control-group">
+        <label>Negócio</label>
+        <select name="business_type" style="min-width: 110px">
+          <option value="venda" selected>Venda</option>
+          <option value="aluguel">Aluguel</option>
+        </select>
+      </div>
+      <div
+        class="control-group"
+        x-data="{ open: false, types: ['apartamento'],
+             labels: {apartamento:'Apartamento', casa:'Casa', terreno:'Terreno', loft:'Loft / Studio', comercial:'Sala Comercial'} }"
+      >
+        <label>Tipo</label>
+        <div
+          class="type-select"
+          :class="{ open: open }"
+          @click.outside="open = false"
+        >
+          <button
+            type="button"
+            class="type-select-trigger"
+            @click="open = !open"
+          >
+            <span
+              x-text="types.length === 0 ? 'Selecionar tipo' : types.length === 1 ? labels[types[0]] : types.length + ' tipos selecionados'"
+            ></span>
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
+          <div class="type-select-panel" x-show="open" x-cloak>
+            <template
+              x-for="[value, label] in Object.entries(labels)"
+              :key="value"
+            >
+              <label class="type-select-option">
+                <input
+                  type="checkbox"
+                  name="property_types"
+                  :value="value"
+                  x-model="types"
+                />
+                <span x-text="label"></span>
+              </label>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="controls-divider"></div>
+    <div
+      class="controls-section"
+      x-data="{ city: 'Tubarão', neighborhoods: [] }"
+      x-init="neighborhoods = (window.BAIRROS[city] || []).slice().sort()"
+    >
+      <div class="control-group">
+        <label>Cidade</label>
+        <select
+          name="city"
+          x-model="city"
+          @change="neighborhoods = (window.BAIRROS[city] || []).slice().sort()"
+          style="min-width: 140px"
+        >
+          <option value="">Todas as Cidades</option>
+          <option value="Tubarão">Tubarão</option>
+          <option value="Capivari de Baixo">Capivari de Baixo</option>
+          <option value="Laguna">Laguna</option>
+          <option value="Jaguaruna">Jaguaruna</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Bairro</label>
+        <select
+          name="neighborhood"
+          :disabled="neighborhoods.length === 0"
+          style="min-width: 150px"
+        >
+          <option value="">Todos os bairros</option>
+          <template x-for="b in neighborhoods" :key="b">
+            <option :value="b" x-text="b"></option>
+          </template>
+        </select>
+      </div>
+    </div>
+    <div class="controls-divider"></div>
+    <div class="controls-section">
+      <div class="control-group">
+        <label>Preço mín.</label>
+        <input
+          name="min_price"
+          type="number"
+          placeholder="0"
+          style="min-width: 110px"
+        />
+      </div>
+      <div class="control-group">
+        <label>Preço máx.</label>
+        <input
+          name="max_price"
+          type="number"
+          value="320000"
+          style="min-width: 110px"
+        />
+      </div>
+    </div>
+    <div class="controls-divider"></div>
+    <div class="controls-section">
+      <div class="control-group">
+        <label>Quartos mín.</label>
+        <select name="min_bedrooms">
+          <option value="">Todos</option>
+          <option value="1" selected>1+</option>
+          <option value="2">2+</option>
+          <option value="3">3+</option>
+          <option value="4">4+</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Banheiros mín.</label>
+        <select name="min_bathrooms">
+          <option value="">Todos</option>
+          <option value="1" selected>1+</option>
+          <option value="2">2+</option>
+          <option value="3">3+</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Vagas mín.</label>
+        <select name="min_parking">
+          <option value="">Todos</option>
+          <option value="1" selected>1+</option>
+          <option value="2">2+</option>
+        </select>
+      </div>
+    </div>
+    <div class="controls-divider"></div>
+    <div class="controls-section">
+      <div class="control-group">
+        <label>Área mín. (m²)</label>
+        <input
+          name="min_area"
+          type="number"
+          value="50"
+          style="min-width: 90px"
+        />
+      </div>
+      <div class="control-group">
+        <label>Área máx. (m²)</label>
+        <input
+          name="max_area"
+          type="number"
+          placeholder="Sem limite"
+          style="min-width: 90px"
+        />
+      </div>
+    </div>
+    <div class="controls-right">
+      <a href="{% url 'search' %}" class="btn btn-ghost">Limpar</a>
+      <button type="submit" class="btn btn-primary">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
+        Buscar
+      </button>
+    </div>
+  </div>
+</form>
+
+<div id="results">{% include "search/_results.html" %}</div>
+
+<div
+  id="image-modal"
+  class="modal"
+  x-data
+  x-show="$store.search.modalImg"
+  x-cloak
+  @click.self="$store.search.closeImage()"
+  @keydown.escape.window="$store.search.closeImage()"
+>
+  <span
+    class="modal-close"
+    style="top: 15px; right: 20px; color: var(--ink)"
+    @click="$store.search.closeImage()"
+    >&times;</span
+  >
+  <img class="modal-content" :src="$store.search.modalImg" />
+</div>
+
+<div
+  id="sources-modal"
+  class="modal"
+  x-data
+  x-show="$store.search.sourcesLinks"
+  x-cloak
+  @click.self="$store.search.closeSources()"
+  @keydown.escape.window="$store.search.closeSources()"
+>
+  <div
+    class="modal-content"
+    style="
+      background: var(--surface);
+      padding: 1.5rem;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 450px;
+    "
+  >
+    <span
+      class="modal-close"
+      style="top: 15px; right: 20px; color: var(--ink)"
+      @click="$store.search.closeSources()"
+      >&times;</span
+    >
+    <h3
+      style="
+        margin-bottom: 1rem;
+        font-family: &quot;Playfair Display&quot;, serif;
+      "
+    >
+      Anunciado em:
+    </h3>
+    <div
+      style="
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        max-height: 60vh;
+        overflow-y: auto;
+      "
+    >
+      <template x-for="l in ($store.search.sourcesLinks || [])" :key="l.url">
+        <div
+          style="
+            padding: 1rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <div>
+            <strong
+              style="
+                display: block;
+                font-size: 0.95rem;
+                text-transform: capitalize;
+              "
+              x-text="l.agency"
+            ></strong>
+            <span
+              style="color: var(--green); font-size: 0.85rem; font-weight: 500"
+              x-text="l.price ? ('R$ ' + Number(l.price).toLocaleString('pt-BR')) : 'Preço sob consulta'"
+            ></span>
+          </div>
+          <a
+            :href="l.url"
+            target="_blank"
+            class="btn btn-primary"
+            style="
+              text-decoration: none;
+              font-size: 0.8rem;
+              padding: 0 1.2rem;
+              height: 32px;
+            "
+            >Acessar</a
+          >
+        </div>
+      </template>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_scripts %}
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  crossorigin=""
+></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+<script src="{% static 'js/search.js' %}"></script>
+{% endblock %}

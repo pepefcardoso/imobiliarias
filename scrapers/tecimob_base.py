@@ -21,8 +21,8 @@ import logging
 from typing import Any, Optional
 
 from config.settings import AgencyConfig
-from core.models import Property, SearchQuery
-from core.parsing_utils import parse_area, parse_price, safe_int, parse_condo_fee
+from domain.models import Property, SearchQuery
+from domain.parsing_utils import parse_area, parse_price, safe_int, parse_condo_fee
 from infrastructure.http_client import HttpClient
 from scrapers.base import AgencyScraper
 
