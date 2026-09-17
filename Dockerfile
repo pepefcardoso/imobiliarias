@@ -15,7 +15,9 @@ COPY . .
 RUN uv sync --frozen --no-dev
 
 ENV DJANGO_SETTINGS_MODULE=webapp.settings.prod
-RUN python manage.py collectstatic --noinput
+RUN POSTGRES_DB=collectstatic POSTGRES_USER=collectstatic POSTGRES_PASSWORD=collectstatic \
+    REDIS_URL=redis://localhost:6379/0 \
+    python manage.py collectstatic --noinput
 
 COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh
