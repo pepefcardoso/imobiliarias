@@ -3,7 +3,7 @@
 <html lang="pt-br">
   <head>
     <meta charset="UTF-8" />
-    <title>{% block title %}Imobiliárias{% endblock %}</title>
+    <title>{% block title %}CasaSul{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
     <script
@@ -24,7 +24,7 @@
   </head>
   <body class="bg-gray-50">
     <nav class="flex justify-between items-center px-6 py-4 border-b">
-      <a href="/" class="font-semibold">Imobiliárias</a>
+      <a href="/" class="font-semibold">CasaSul</a>
       <div class="text-sm">
         {% if user.is_authenticated %} {{ user.email }} ·
         <a href="{% url 'account_logout' %}">Sair</a>

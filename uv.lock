@@ -264,7 +264,7 @@ wheels = [
 ]
 
 [[package]]
-name = "imobiliarias"
+name = "casasul"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
