@@ -38,7 +38,7 @@ services:
       - "traefik.http.routers.casasul.rule=Host(`casasul.pepefcardoso.dev`)"
       - "traefik.http.routers.casasul.entrypoints=websecure"
       - "traefik.http.routers.casasul.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.casasul.middlewares=security-headers@file,casasul-ratelimit"
+      - "traefik.http.routers.casasul.middlewares=casasul-security-headers@file,casasul-ratelimit"
       - "traefik.http.services.casasul.loadbalancer.server.port=8000"
       - "traefik.http.middlewares.casasul-ratelimit.ratelimit.average=50"
       - "traefik.http.middlewares.casasul-ratelimit.ratelimit.burst=100"

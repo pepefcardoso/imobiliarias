@@ -4,6 +4,8 @@ from .base import *
 DEBUG = False
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "build-placeholder")
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",")
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+CSRF_TRUSTED_ORIGINS = [f"https://{h}" for h in ALLOWED_HOSTS if h]
 
 DATABASES = {
     "default": {
