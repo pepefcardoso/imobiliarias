@@ -55,6 +55,8 @@ WSGI_APPLICATION = "webapp.wsgi.application"
 
 AUTH_USER_MODEL = "accounts.User"
 
+LANGUAGE_CODE = "pt-br"
+
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",

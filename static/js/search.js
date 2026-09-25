@@ -144,7 +144,7 @@ document.addEventListener("alpine:init", () => {
         return { ...p, price_sqm, distance };
       });
       this.page = 1;
-      if (this.view === "map") this.resetMapAndGeocode();
+      if (this.view === "map") this.$nextTick(() => this.initMap());
     },
 
     get sorted() {
@@ -215,6 +215,11 @@ document.addEventListener("alpine:init", () => {
     },
 
     initMap() {
+      if (this.map && !document.body.contains(this.map.getContainer())) {
+        this.map.remove();
+        this.map = null;
+        this.markersGroup = null;
+      }
       if (!this.map) {
         const center = CITY_CENTERS["Tubarão"];
         this.map = L.map("map-container").setView([center.lat, center.lng], 13);

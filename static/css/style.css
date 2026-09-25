@@ -698,3 +698,44 @@ a.link:hover {
 .site-footer a:hover {
   text-decoration: underline;
 }
+
+.auth-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 2rem;
+}
+
+.auth-card h1 {
+  font-family: "Playfair Display", serif;
+  font-size: 1.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.auth-form .control-group input,
+.auth-form .control-group select {
+  width: 100%;
+}
+
+.auth-alt-link {
+  display: block;
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  text-decoration: none;
+}
+
+.auth-alt-link:hover {
+  color: var(--accent);
+}
+
+.form-error {
+  color: var(--accent);
+  font-size: 0.8rem;
+}
