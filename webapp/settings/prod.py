@@ -29,6 +29,5 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
